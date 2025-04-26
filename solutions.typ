@@ -75,7 +75,7 @@ Approximating 2 points in $RR^2$ by a line is trivial, now approximating more th
   ],
 )
 
-Given the points $(1, 1), (2, 2(, (3, 2) in RR^2$, we would like a _line_ $y = alpha + beta t$ that best approximates these 3 points, in other words, since we know that the line does not pass through all of the 3 points, we would like to find the _closest_ line to the line that would pass throught the 3 points, so the system:
+Given the points $(1, 1), (2, 2), (3, 2) in RR^2$, we would like a _line_ $f(t) = y(t) = alpha + beta t$ that best approximates these 3 points, in other words, since we know that the line does not pass through all of the 3 points, we would like to find the _closest_ line to the line that would pass throught the 3 points, so the system:
 
 $
   f(1) = alpha + beta = 1\
@@ -155,7 +155,7 @@ $
   (diff f) / (diff alpha) = (diff f) / (diff beta) = 0 <=> 6 alpha + 12 d - 10 = 28 beta + 12 alpha - 22 = 0 <=> cases(
     3c + 6d = 11, 6c + 14d = 11
   )
-$
+$ <system_2>
 
 This new system has a solution in $hat(alpha) = 2/3 , hat(beta) = 1/2$, so the equation of the optimal line, obtained through _linear regression_ (or least squares) is:
 
@@ -166,7 +166,97 @@ $
 If we have $n > 3$ points to approximate throught a line, the reasoning is analogous:
 
 
+With $S := {t_i = i/m}, i = 0, 1, dots, m$, we will find the best _line_ $f(t) = alpha + beta t$ that approximates the points $(t_i, b_i) in RR^2$
 
+The system of equations to be solved be given as a function of $t_i, b_i, m$.
 
+We want to find the extended system as we did in @system_2, so our line is:
+$
+  f(t) = alpha + beta t
+$
+
+That best approximates the points $(0, b_0), (1/m, b_1), dots , (1, b_m)$. The system is:
+
+$
+  f(0) = b_0 = alpha,\
+  f(1/m) = b_1 = alpha + beta/m,\
+  f(2/m) = b_2 = alpha + 2/m beta\
+  dots\
+  f(1) = b_m = alpha + beta
+$
+
+And the $A x = b$ matrices alternative:
+
+$
+  underbrace(mat(
+    1, 0;
+    1, 1/m;
+    dots.v, dots.v;
+    1, 1
+  ), A) dot underbrace(mat(alpha;beta), x) = underbrace(mat(b_1; dots.v; b_m), b)
+$
+
+Projecting into $C(A)$, we have:
+
+$
+  A^T A x = A^T b\
+  = mat(1, 1, dots, 1; 0, 1/m, dots, 1) dot mat(
+    1, 0;
+    1, 1/m;
+    dots.v, dots.v;
+    1, 1
+  ) = mat(
+    m + 1, (m+1)/2;
+    (m+1)/2 , ((m+1)(2m+2))/(6 m)
+  ) dot mat(hat(alpha);hat(beta))\
+
+  = mat(
+    1, 1, dots, 1;
+    0, 1/m, dots, 1
+  ) dot mat(b_1; dots.v; b_m) = mat(
+    b_1 + b_2 + dots + b_m;
+    1/m [b_2 + 2 b_3 + dots + (m-1) b_m ]
+  )
+$
+
+So the new system to be solved is:
+
+$
+  mat(
+    m + 1, (m+1)/2;
+    (m+1)/2 , ((m+1)(2m+2))/(6 m)
+  ) dot mat(hat(alpha);hat(beta)) = mat(
+    b_1 + b_2 + dots + b_m;
+    1/m [b_2 + 2 b_3 + dots + (m-1) b_m ]
+  )
+$
+
+Or:
+
+$
+  mat(
+    m + 1, sum_(i = 1)^m t_i;
+    sum_(i = 1)^m t_i, sum_(i = 1)^m t_i^2;
+  ) dot mat(hat(alpha); hat(beta)) = mat(
+    sum_(i = 1)^m b_i;
+    sum_(i = 1)^m i/m dot b_i
+  )
+$
+== The Conditioning number of a matrix (b)
+
+=== Conditioning Number of matrices
+=== Application
+
+== More Regression: A Polynomial Perspective (c)
+
+== Finding the matrix A through Python (d)
+== How Perturbations Affect The Conditioning Number (e)
+== Another Set of Points (f)
+
+= Least Squares Algorithms 
+== The SVD, QR factorizations and the normal approach (a)
+
+== Testing the Algorithms and analyzing plots (b)
+== The polynomial approach: An efficiency analysis (c)
 
 
