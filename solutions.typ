@@ -28,7 +28,7 @@
 )
 #let definition = thmbox("definition", "Definition", inset: (x: 1.2em, top: 1em))
 
-#let example = thmplain("example", "Example").with(numbering: none)
+#let example = thmplain("example", "Example").with(numbering: "1.")
 #let proof = thmproof("proof", "Proof")
 
 #align(right, text(13pt)[ //L
@@ -242,7 +242,45 @@ $
     sum_(i = 1)^m i/m dot b_i
   )
 $
-== The Conditioning number of a matrix (b)
+== The Condition number of a matrix (b)
+
+Conditioning numbers are very important in numerical analysis and to the efficiency of numerical procedures, given the sad fact that machines with infinite memory have not been built (yet), conditioning and stability are of unquantifiable importance
+
+=== The Conditioning number of a problem
+
+A _problem_ is usually described as a function $f: X -> Y$ from a #text(weight: "bold")[normed] vector space $X$ of data (it has to be normed so qe can _quantify_ data) and a _normed_ vector space $Y$ of solutions, $f$ is not always a well-behaved continuous function, which is why we are interested in #text(weight: "bold")[well-conditioned] problems and #text(weight: "bold")[ill-conditioned] problems, which we define:
+
+#definition[(Well-Conditioned Problem)
+  A problem $f:X -> Y$ is _well-conditioned_ at $x_0 in X$ $<=> forall epsilon > 0, exists delta > 0 |  ||x - x_0|| < delta => ||f(x) - f(x_0)|| < epsilon$.
+] <definition_of_stable_problem>
+
+This means that small perturbations in $x$ lead to small changes in $f(x)$, a problem is #text(weight: "bold")[ill-conditioned] if $f(x)$ can explode with small changes in $x$.
+
+We usually say $f$ is well-conditioned if it is well-conditioned $forall x in X$, if thereis at least one $x_i$ in which the problem is ill-conditioned, then the whole problem is ill-conditioned.
+
+Conditioning numbers are a tool to quantify how well/ill conditioned a problem is:
+
+#definition[(Absolute Conditioning Number)
+  Let $delta x$ be a small pertubation of $x$, so $delta f = f(x + delta x) - f(x)$. The #text(weight: "bold")[absolute] conditioning number of $f$ is:
+
+  $
+    hat(kappa) = lim_(delta -> 0) sup_(||delta x|| <= delta) (||delta f||) / (||delta x||)
+  $
+] <definition_absolute_conditioning_number>
+
+The limit of the supremum can be seen as the supremum of all _infinitesimal_ perturbations, so this can be rewritten as:
+
+$
+  hat(kappa) = sup_(delta x) (||delta f||) / (||delta x||)
+$
+
+If $f$ is differentiable, we can evaluate the abs.conditioning number using its derivative, if $J$ is the matrix whose $i times j$ entry is the derivative $(diff f_i) / (diff x_j)$ (jacobian of $f$), then we know that $delta f approx J(x) delta x$, with equality in the limit $||delta x|| -> 0$. So the absolute conditioning number of $f$ becomes:
+
+$
+  hat(kappa) = ||J(x)||,
+$ <absolute_conditioning_number_throught_jacobian>
+
+
 
 === Conditioning Number of matrices
 === Application
