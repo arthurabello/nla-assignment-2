@@ -75,7 +75,7 @@ Approximating 2 points in $RR^2$ by a line is trivial, now approximating more th
   ],
 )
 
-Given the points $(1, 1), (2, 2), (3, 2) in RR^2$, we would like a _line_ $f(t) = y(t) = alpha + beta t$ that best approximates these 3 points, in other words, since we know that the line does not pass through all of the 3 points, we would like to find the _closest_ line to the line that would pass throught the 3 points, so the system:
+Given the points $(1, 1), (2, 2), (3, 2) in RR^2$, we would like a _line_ $f(t) = y(t) = alpha + beta t$ that best approximates these 3 points, in other words, since we know that the line does not pass through all of the 3 points, we would like to find the _closest_ line to the line that would pass through the 3 points, so the system:
 
 $
   f(1) = alpha + beta = 1\
@@ -83,7 +83,7 @@ $
   f(3) = alpha + 3 beta = 2
 $
 
-Clearly has no solution, (the line does not cross the 3 points), but it has a _closest solution_, which we can find throught #text(weight: "bold")[projections], the system is:
+Clearly has no solution, (the line does not cross the 3 points), but it has a _closest solution_, which we can find through #text(weight: "bold")[projections], the system is:
 
 $
   underbrace(mat(
@@ -163,7 +163,7 @@ $
   y(t) = 2/3 + 1/2 t.
 $
 
-If we have $n > 3$ points to approximate throught a line, the reasoning is analogous:
+If we have $n > 3$ points to approximate through a line, the reasoning is analogous:
 
 
 With $S := {t_i = i/m}, i = 0, 1, dots, m$, we will find the best _line_ $f(t) = alpha + beta t$ that approximates the points $(t_i, b_i) in RR^2$
@@ -242,7 +242,7 @@ $
     sum_(i = 1)^m i/m dot b_i
   )
 $
-== The Condition number of a matrix (b)
+== The Condition number of a matrix
 
 Conditioning numbers are very important in numerical analysis and to the efficiency of numerical procedures, given the sad fact that machines with infinite memory have not been built (yet), conditioning and stability are of unquantifiable importance
 
@@ -254,7 +254,7 @@ A _problem_ is usually described as a function $f: X -> Y$ from a #text(weight: 
   A problem $f:X -> Y$ is _well-conditioned_ at $x_0 in X$ $<=> forall epsilon > 0, exists delta > 0 |  ||x - x_0|| < delta => ||f(x) - f(x_0)|| < epsilon$.
 ] <definition_of_stable_problem>
 
-This means that small perturbations in $x$ lead to small changes in $f(x)$, a problem is #text(weight: "bold")[ill-conditioned] if $f(x)$ can explode with small changes in $x$.
+This means that small perturbations in $x$ lead to small changes in $f(x)$, a problem is #text(weight: "bold")[ill-conditioned] if $f(x)$ can suffer huge changes with small changes in $x$.
 
 We usually say $f$ is well-conditioned if it is well-conditioned $forall x in X$, if thereis at least one $x_i$ in which the problem is ill-conditioned, then the whole problem is ill-conditioned.
 
@@ -278,12 +278,154 @@ If $f$ is differentiable, we can evaluate the abs.conditioning number using its 
 
 $
   hat(kappa) = ||J(x)||,
-$ <absolute_conditioning_number_throught_jacobian>
+$ <absolute_conditioning_number__jacobian>
 
+=== The relative Conditioning Number
 
+When, instead of analyzing the whole set $X$ of data, we are interested in _relative_ changes, we use the #text(weight: "bold")[relative condition number:]
+
+#definition[(Relative Condition Number)
+  Give $f:X -> Y$ a problem, the _relative condition number_ $kappa(x)$ at $x in X$ is:
+
+  $
+    kappa(x) = lim_(delta -> 0) sup_(||delta x|| <= delta) ((||delta f||) / (||f(x)||)) dot ((||delta x||) / (||x||))^(-1)
+  $
+] <definition_relative_condition_number>
+
+Or, as we did in @definition_absolute_conditioning_number, assuming that $delta f$ and $delta x$ are infinitesimal:
+
+$
+  kappa(x) = sup_(delta x)) ((||delta f||) / (||f(x)||)) dot ((||delta x||) / (||x||))^(-1)
+$
+
+If $f$ is differentiable:
+
+$
+  kappa(x) = (||J(x)||) dot ((||f(x)||) / (||x||))^(-1)
+$ <relative_condition_number_through_jacobian>
+
+Relative condition numbers are more useful than absolute conditioning numbers because the #text(weight: "bold")[floating point arithmetic] used in many computers produces _relative_ errors, the latter is not a highlight of this discussion.
+
+Here are some examples of conditioning:
+
+#example[
+  Consider the problem of obtaining the scalar $x/2$ from $x in RR$, the function $f(x) = x/2)$ is differentiablke, so by @relative_condition_number_through_jacobian:
+
+  $
+    kappa(x) = (||J||) dot ((||f(x)||) / (||x||))^(-1) = (1/2) dot ((x/2) / x)^(-1) = 1.
+  $
+]
+
+This problem is well-conditioned ($kappa$ is small).
+
+#example[
+  Consider the problem of computing the scalar $x_1 - x_2$ from $(x_1, x_2) in RR^2$ (Use the $infinity$-norm in $RR^2$ for simplicity). The function associated is differentiable and the jacobian is:
+
+  $
+    J = mat((diff f) / (diff x_1) , (diff f) / (diff x_2)) = mat(1,-1)
+  $
+  With $||J||_infinity$ = 2, so the condition number is:
+
+  $
+    kappa = (||J||_infinity) dot ((||f(x)||) / (||x||))^(-1) = 2 / (|x_1 - x_1| dot max{|x_1|, |x_2|})
+  $
+
+  This problem can be ill-conditioned if $|x_1 - x_2| approx 0$ ($kappa$ gets huge), and well-conditioned otherwise
+].
 
 === Conditioning Number of matrices
-=== Application
+
+We will deduce the conditioning number of a matrix from the conditioning number of _matrix-vector_ multiplication:
+
+Consider the problem of obtaining $A x$ given $A in CC^(m times n)$, we will calculate the relative condition number with respect to perturbations in $x$, directly from @definition_relative_condition_number, we have:
+
+$
+  kappa = sup_(delta x) (||A (x + delta x) - A x||) / (||A x||) dot ((||delta x||) / (||x||))^(-1) = sup_(delta x) (||A delta x||) / (||delta x||) dot ((||A x||) / (||x||))^(-1)
+$ <beginning_proof>
+
+Since $sup_(delta x) (||A delta x||) / (||delta x||) = ||A|| $, we have:
+
+$
+  kappa = ||A|| dot (||x||) / (||A x||)
+$ <condition_number_of_matrix_vector_multiplication>
+
+This is a precise formula as a function of $(A, x)$.
+
+Suppose for a moment that $A$ is square and non-singular:
+
+#theorem[
+  For $x in RR^n, A in RR^(n times n), det(A) != 0$, the following holds:
+
+  $
+      (||x||) / (||A x||) <= ||A^(-1)||
+  $
+] <theorem_inequality_norms>
+
+#proof[
+  Since:
+
+  $
+    ||A^(-1)|| = sup_(delta x) (||A^(-1) x||) / (||x||)
+  $
+
+  Using this in the inequality #text(weight: "bold")[and] supposing the oposite ($>$ instead of $<=$):
+
+  $
+    (||x||) / (||A x||) > sup_(delta x) (||A^(-1) x||) / (||x||)\
+
+    <=> (||x||) / (||A x||) > (||A^(-1) x||) / (||x||)\
+
+    <=> ||x|| dot ||x|| > ||A^(-1) x|| dot ||A x||\
+
+    "PROVAR ESSA PORRA DIREITO"
+  $
+]
+
+So using this in @condition_number_of_matrix_vector_multiplication , we can write:
+
+$
+  kappa <= ||A|| dot ||A^(-1)||
+$
+
+Or:
+
+$
+  kappa = alpha ||A|| dot ||A^(-1)||
+$
+
+With
+
+$
+  alpha = (||x||) / (||A x||) dot (||A^(-1)||)^(-1)
+$ <end_proof>
+
+We can choose $x$ to make $alpha = 1$, and therefore $kappa = ||A|| dot ||A^(-1)||$.
+
+Consider now the problem of calculating $A^(-1) b$ given $A$, mathematically it is identical to the problem we just considered, so the following has already been proven:
+
+#theorem[
+  Let $A in C^(n times n), det(A) != 0$, and consider $A x = b$, the problem of computing $b$, perturbating $x$ has conditioning number:
+
+  $
+    kappa = ||A|| (||x||) / (||b||) <= ||A|| dot ||A^(-1)||
+  $
+]
+
+#proof[
+  Read from @beginning_proof to @end_proof.
+]
+
+Finally, $||A|| dot ||A^(-1)||$ is so useful it has a name: #text(weight: "bold")[the condition number of A] (relative to the norm $||dot||$)
+
+If $A$ is singular, usually we wreite $kappa(A) = infinity$, notice that if $||dot|| = ||dot||_2$, then $||A|| = sigma_1$ and $||A^(-1)|| = 1/sigma_m$, so:
+
+$
+  kappa(A) = sigma_1 / sigma_m
+$
+
+This is very useful, as we show an interesting application:
+
+=== Application (b)
 
 == More Regression: A Polynomial Perspective (c)
 
