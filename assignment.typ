@@ -50,13 +50,21 @@
   #datetime.today().display("[day]/[month]/[year]")
 ])
 
-#pagebreak()
+#align(center)[
+  #set par(justify: true)
+  *Abstract* \
+  #lorem(80)
+]
+
+
 
 #outline()
 
 #pagebreak()
 
-= Problem 1: Traditional Least Squares ( a - f )
+= Linear Regression: The Least Squares Method
+
+#lorem(80) //CHANGE THIS SHIT
 
 == Linear Regression (a)
 <section_simple_linear_regression>
@@ -244,6 +252,20 @@ $
   )
 $ <matrix_system_least_squares>
 
+And the least squares optimal solution is:
+
+$
+  mat(hat(alpha); hat(beta)) = mat(
+    m + 1, sum_(i = 1)^m t_i;
+    sum_(i = 1)^m t_i, sum_(i = 1)^m t_i^2;
+  )^(-1) dot mat(
+    sum_(i = 1)^m b_i;
+    sum_(i = 1)^m i/m dot b_i
+  )
+$
+
+Now we will discuss if this method is efficient, we will use #text(weight: "bold")[Conditioning Numbers] as 
+
 == The Condition number of a matrix
 
 Conditioning numbers are very important in numerical analysis and to the efficiency of numerical procedures, given the sad fact that machines with infinite memory have not been built (yet), conditioning and stability are of unquantifiable importance
@@ -430,7 +452,7 @@ $
   det(B - lambda I) = 0 <=> det(mat(
     m+1 - lambda , (m + 1) / 2;
     (m + 1) / 2 , ((m + 1) (2m + 1)) / 6 - lambda
-  )) = 0\
+  )) = 0\ 
 
   <=> (m + 1 - lambda) [((m + 1) (2m + 1)) / 6 - lambda] - ((m + 1)/2)^2 = 0\
 
@@ -457,6 +479,8 @@ $
   = sqrt(((8m + 1) + sqrt(52m^2-  8m + 1)) / ((8m + 1) - sqrt(52m^2-  8m + 1)))
 $
 
+When $m -> infinity$: COLOCAR O LIMITE
+
 Here are some python examples:
 
 (COLOCA AS PORRA DOS EXEMPLO)
@@ -470,7 +494,7 @@ $
   f(t) = alpha + beta t -> p(t) = phi_0 + phi_1 t + dots + phi_n t^n
 $
 
-From a first perspective, it seems way more efficient to describe a dataset with many variables than with a simple line $alpha + beta t$, so let's use the same dataset $S := {(t_i,b_i), t_i = i/m}, i = 0, 1, dots, m$ and $b_i$ is arbitrary, as we did in @section_simple_linear_regression, finding the new system to be solved:
+From a first perspective, it seems way more efficient to describe a dataset with many variables than with a simple line $alpha + beta t$, so let's use the same dataset $S := {(t_i,b_i), t_i = i/m}, i = 0, 1, dots, m$. Where $b_i$ is arbitrary, as we did in @section_simple_linear_regression, finding the new system to be solved:
 
 $
   p(t_0 = 0) = b_0 = phi_0,\
@@ -481,17 +505,109 @@ $
 
   dots.v\
   
-  p(t_m = 1) = phi_0 + dots + phi_n
+  p(t_m = 1) = b_m = phi_0 + dots + phi_n
 $
 
-== Finding the matrix A through Python (d)
-== How Perturbations Affect The Conditioning Number (e)
-== Another Set of Points (f)
+And:
 
-= Least Squares Algorithms 
-== The SVD, QR factorizations and the normal approach (a)
+$
+ underbrace(mat(
+  1, 0, 0, dots, 0;
+  1, 1/m, (1/m)^2, dots, (1/m)^n;
+  1, 2/m, (2/m)^2, dots, (2/m)^n;
+  dots.v, dots.v, dots.v, dots.v, dots.v;
+  1, 1, 1, dots, 1
+ ),A_(n+1 times n+1)) dot underbrace(mat(
+  phi_0; phi_1; phi_2; dots.v; phi_n
+ ), Phi_(n+1 times 1)) = underbrace(mat(
+  b_0; b_1; b_2; dots.v; b_m
+ ), b_(n + 1 times 1))
+$
 
-== Testing the Algorithms and analyzing plots (b)
+Projecting into $C(A)$:
+
+$
+  A^T A hat(Phi) = mat(
+    1, 1, 1, dots, 1;
+    0, 1/m, 2/m, dots, 1;
+    0, (1/m)^2, (2/m)^2, dots, 1;
+    dots.v, dots.v, dots.v, dots, dots.v;
+    0, (1/m)^n, (2/m)^n, dots, 1
+  ) dot mat(
+  1, 0, 0, dots, 0;
+  1, 1/m, (1/m)^2, dots, (1/m)^n;
+  1, 2/m, (2/m)^2, dots, (2/m)^n;
+  dots.v, dots.v, dots.v, dots.v, dots.v;
+  1, 1, 1, dots, 1
+ ) dot mat(hat(phi_0); hat(phi_1); hat(phi_2); dots.v; hat(phi_n))\
+
+ = mat(
+  n + 1, sum_(i = 1)^m i/m, sum_(i = 1)^m (i/m)^2, dots, sum_(i = 1)^m (i/m)^n;
+  sum_(i = 1)^m i/m, sum_(i = 1)^m (i/m)^2, sum_(i = 1)^m (i/m)^3, dots, sum_(i = 1)^m (i/m)^(n+1);
+  sum_(i = 1)^m (i/m)^2, sum_(i = 1)^m (i/m)^3, sum_(i = 1)^m (i/m)^4, dots, sum_(i = 1)^m (i/m)^n+2;
+  dots.v, dots.v, dots.v, dots.v, dots.v;
+  sum_(i = 1)^m (i/m)^n, sum_(i = 1)^m (i/m)^(n+1), sum_(i = 1)^m (i/m)^(n+2), dots, sum_(i = 1)^m (i/m)^(2n)
+ ) dot mat(hat(phi_0); hat(phi_1); hat(phi_2); dots.v; hat(phi_n))\
+
+
+ = mat(
+    1, 1, 1, dots, 1;
+    0, 1/m, 2/m, dots, 1;
+    0, (1/m)^2, (2/m)^2, dots, 1;
+    dots.v, dots.v, dots.v, dots, dots.v;
+    0, (1/m)^n, (2/m)^n, dots, 1
+  ) dot mat(
+  b_0; b_1; b_2; dots.v; b_m 
+  ) = mat(
+    sum_(i = 0)^m b_i; sum_(i = 0)^m (i b_i) / m; sum_(i = 0)^m (i/m)^2 m; dots.v; sum_(i = 0)^m (i/m)^n b_i
+  )
+$
+
+So the system to be solved is:
+
+$
+  mat(
+    n + 1, sum_(i = 1)^m i/m, dots, sum_(i = 1)^m (i/m)^n;
+    sum_(i = 1)^m i/m, sum_(i = 1)^m (i/m)^2, dots, sum_(i = 1)^m (i/m)^(n+1);
+    sum_(i = 1)^m (i/m)^2, sum_(i = 1)^m (i/m)^3, dots, sum_(i = 1)^m (i/m)^n+2;
+    dots.v, dots.v, dots.v, dots.v;
+    sum_(i = 1)^m (i/m)^n, sum_(i = 1)^m (i/m)^(n+1), dots, sum_(i = 1)^m (i/m)^(2n)
+ ) dot mat(hat(phi_0); hat(phi_1); hat(phi_2); dots.v; hat(phi_n)) = mat(
+    sum_(i = 0)^m b_i; sum_(i = 0)^m (i b_i) / m; sum_(i = 0)^m (i/m)^2 m; dots.v; sum_(i = 0)^m (i/m)^n b_i
+  )
+$ <matrix_system_polynomial_least_squares>
+
+Therefore the least squares _polynomial regression_ optimal solution is:
+
+$
+  mat(hat(phi_0); hat(phi_1); hat(phi_2); dots.v; hat(phi_n)) = mat(
+    n + 1, sum_(i = 1)^m i/m, dots, sum_(i = 1)^m (i/m)^n;
+    sum_(i = 1)^m i/m, sum_(i = 1)^m (i/m)^2, dots, sum_(i = 1)^m (i/m)^(n+1);
+    sum_(i = 1)^m (i/m)^2, sum_(i = 1)^m (i/m)^3, dots, sum_(i = 1)^m (i/m)^n+2;
+    dots.v, dots.v, dots.v, dots.v;
+    sum_(i = 1)^m (i/m)^n, sum_(i = 1)^m (i/m)^(n+1), dots, sum_(i = 1)^m (i/m)^(2n)
+ )^(-1) dot mat(
+    sum_(i = 0)^m b_i; sum_(i = 0)^m (i b_i) / m; sum_(i = 0)^m (i/m)^2 m; dots.v; sum_(i = 0)^m (i/m)^n b_i
+  )
+$
+
+== How can one find the matrix A, given (m,n)?  (d)
+
+Here we show a python-implemented function that calculates the matrix $A$ as a function of the dimensions $(m, n)$:
+
+BOTAR A FUNÇÃO PYTHON
+
+== How Perturbations Affect The Condition Number of A (e)
+
+In this section we analyze what happens to $kappa(A)$, when $A$ is perturbated with $m = 100$ and $n = 1, dots, 20$
+== A different dataset
+=== A Numerical Approach
+=== How Conditioning Changes (f)
+
+= Some Algorithms 
+== The SVD and QR factorizations (a)
+=== The factorizations
+=== A Numerical Analysis (b)
 == The polynomial approach: An efficiency analysis (c)
 
 
