@@ -59,6 +59,7 @@
 = Problem 1: Traditional Least Squares ( a - f )
 
 == Linear Regression (a)
+<section_simple_linear_regression>
 
 We have a set of equally spaced points $S := {t_i = i/m}, i = 0, 1, dots, m$, we will find the best _line_ $f(t) = alpha + beta t$ that approximates the points $(t_i, b_i) in RR^2$
 
@@ -193,7 +194,7 @@ $
     1, 1/m;
     dots.v, dots.v;
     1, 1
-  ), A) dot underbrace(mat(alpha;beta), x) = underbrace(mat(b_1; dots.v; b_m), b)
+  ), A) dot underbrace(mat(alpha;beta), x) = underbrace(mat(b_0; dots.v; b_m), b)
 $
 
 Projecting into $C(A)$, we have:
@@ -213,9 +214,9 @@ $
   = mat(
     1, 1, dots, 1;
     0, 1/m, dots, 1
-  ) dot mat(b_1; dots.v; b_m) = mat(
-    b_1 + b_2 + dots + b_m;
-    1/m [b_2 + 2 b_3 + dots + (m-1) b_m ]
+  ) dot mat(b_0; dots.v; b_m) = mat(
+    b_0 + b_2 + dots + b_m;
+    1/m [b_1 + 2 b_2 + dots + (m-1) b_(m-1) + b_m ]
   )
 $
 
@@ -226,10 +227,10 @@ $
     m + 1, (m+1)/2;
     (m+1)/2 , ((m+1)(2m+2))/(6 m)
   ) dot mat(hat(alpha);hat(beta)) = mat(
-    b_1 + b_2 + dots + b_m;
-    1/m [b_2 + 2 b_3 + dots + (m-1) b_m ]
+    b_0 + b_1 + dots + b_m;
+    1/m [b_1 + 2 b_2 + dots + (m-1) b_(m-1) + b_m ]
   )
-$
+$ <equation_with_AtransposeA>
 
 Or:
 
@@ -241,7 +242,8 @@ $
     sum_(i = 1)^m b_i;
     sum_(i = 1)^m i/m dot b_i
   )
-$
+$ <matrix_system_least_squares>
+
 == The Condition number of a matrix
 
 Conditioning numbers are very important in numerical analysis and to the efficiency of numerical procedures, given the sad fact that machines with infinite memory have not been built (yet), conditioning and stability are of unquantifiable importance
@@ -285,7 +287,7 @@ $ <absolute_conditioning_number__jacobian>
 When, instead of analyzing the whole set $X$ of data, we are interested in _relative_ changes, we use the #text(weight: "bold")[relative condition number:]
 
 #definition[(Relative Condition Number)
-  Give $f:X -> Y$ a problem, the _relative condition number_ $kappa(x)$ at $x in X$ is:
+  Given $f:X -> Y$ a problem, the _relative condition number_ $kappa(x)$ at $x in X$ is:
 
   $
     kappa(x) = lim_(delta -> 0) sup_(||delta x|| <= delta) ((||delta f||) / (||f(x)||)) dot ((||delta x||) / (||x||))^(-1)
@@ -362,22 +364,10 @@ Suppose for a moment that $A$ is square and non-singular:
 ] <theorem_inequality_norms>
 
 #proof[
-  Since:
+  Since $forall A, B in RR^(n times n), ||A B || <= ||A|| ||B||$, we have:
 
   $
-    ||A^(-1)|| = sup_(delta x) (||A^(-1) x||) / (||x||)
-  $
-
-  Using this in the inequality #text(weight: "bold")[and] supposing the oposite ($>$ instead of $<=$):
-
-  $
-    (||x||) / (||A x||) > sup_(delta x) (||A^(-1) x||) / (||x||)\
-
-    <=> (||x||) / (||A x||) > (||A^(-1) x||) / (||x||)\
-
-    <=> ||x|| dot ||x|| > ||A^(-1) x|| dot ||A x||\
-
-    "PROVAR ESSA PORRA DIREITO"
+    ||A A^(-1) x || <= ||A x|| ||A^(-1)|| <=> (||x||) / (||A x||) <= ||A^(-1)||
   $
 ]
 
@@ -427,7 +417,72 @@ This is very useful, as we show an interesting application:
 
 === Application (b)
 
+Still on least squares, using $||dot||_2$ the conditioning number of 
+@matrix_system_least_squares is:
+
+$
+  kappa(A) = ||A||_2 dot ||A^(-1)||_2 = sigma_1 / sigma_m 
+$
+
+And the singular values $sigma_i$ are the square roots of the eigenvalues $lambda_i$ of $B = A^T A$ (non-crescent order), so from @equation_with_AtransposeA:
+
+$
+  det(B - lambda I) = 0 <=> det(mat(
+    m+1 - lambda , (m + 1) / 2;
+    (m + 1) / 2 , ((m + 1) (2m + 1)) / 6 - lambda
+  )) = 0\
+
+  <=> (m + 1 - lambda) [((m + 1) (2m + 1)) / 6 - lambda] - ((m + 1)/2)^2 = 0\
+
+  <=> lambda^2
+    - ((m + 1)(8m + 1)) / (6m) lambda + ((m + 1)^2 (m + 2)) / (12m)
+    = 0\
+
+  <=> lambda = (m+1)/(12m) [(8m + 1) plus.minus sqrt(52m^2-  8m + 1)]
+$
+
+So the singular values are:
+
+$
+  sigma_1 = sqrt(lambda_1) = sqrt((m+1)/(12m) [(8m + 1) + sqrt(52m^2-  8m + 1)]),\
+
+  sigma_2 = sqrt(lambda_2) = sqrt((m+1)/(12m) [(8m + 1) - sqrt(52m^2-  8m + 1)])
+$
+
+And the condition number of the matrix $A$ is:
+
+$
+  kappa(A) = sigma_1 / sigma_m = sqrt((m+1)/(12m) [(8m + 1) + sqrt(52m^2-  8m + 1)]) / sqrt((m+1)/(12m) [(8m + 1) - sqrt(52m^2-  8m + 1)])\
+
+  = sqrt(((8m + 1) + sqrt(52m^2-  8m + 1)) / ((8m + 1) - sqrt(52m^2-  8m + 1)))
+$
+
+Here are some python examples:
+
+(COLOCA AS PORRA DOS EXEMPLO)
+
 == More Regression: A Polynomial Perspective (c)
+
+
+In this section we will discuss what changes when we decide to use #text(weight: "bold")[polynomials]  instead of #text(weight: "bold")[lines] to approximate our dataset (still on least squares):
+
+$
+  f(t) = alpha + beta t -> p(t) = phi_0 + phi_1 t + dots + phi_n t^n
+$
+
+From a first perspective, it seems way more efficient to describe a dataset with many variables than with a simple line $alpha + beta t$, so let's use the same dataset $S := {(t_i,b_i), t_i = i/m}, i = 0, 1, dots, m$ and $b_i$ is arbitrary, as we did in @section_simple_linear_regression, finding the new system to be solved:
+
+$
+  p(t_0 = 0) = b_0 = phi_0,\
+
+  p(t_1 = 1/m) = b_1 = phi_0 + phi_1 1/m + dots + phi_n (1/m)^n\
+
+  p(t_2 = 2/m) = b_2 = phi_0 + phi_1 2/m + phi_2 (2/m)^2 + dots + phi_n (2/m)^n\
+
+  dots.v\
+  
+  p(t_m = 1) = phi_0 + dots + phi_n
+$
 
 == Finding the matrix A through Python (d)
 == How Perturbations Affect The Conditioning Number (e)
