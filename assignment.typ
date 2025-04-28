@@ -31,21 +31,12 @@
 #let example = thmplain("example", "Example").with(numbering: "1.")
 #let proof = thmproof("proof", "Proof")
 
-#align(right, text(13pt)[ //L
-  FGV - EMAP
-])
-
-#align(center, text(22pt)[
+#align(center, text(21pt)[
   Assignment 2 - Numerical Linear Algebra
 ])
-#align(center, text(18pt)[
-  Prof.: Bernardo Freitas Paulo da Costa
-])
-#align(center, text(16pt)[
-  TA: Beatriz Lúcia Teixeira de Souza
-])
-#align(center, text(16pt)[
-  Student: Arthur Rabello Oliveira
+
+#align(center, text(17pt)[
+  Arthur Rabello Oliveira
 
   #datetime.today().display("[day]/[month]/[year]")
 ])
@@ -53,29 +44,23 @@
 #align(center)[
   #set par(justify: true)
   *Abstract* \
-  #lorem(80)
+  We derive linear and polynomial regression in subsets of $RR$ and discuss the condition number of the associated matrices, numerical algorithms for the SVD and QR factorization are built and used on an efficiency analysis of the 3 methods to do linear or polynomial regression, stability of these algorirths is  mentioned and 
 ]
-
-
 
 #outline()
 
 #pagebreak()
 
-= Linear Regression: The Least Squares Method
+= Introduction
 
-#lorem(80) //CHANGE THIS SHIT
+Given $D subset RR^2$, a dataset, approximating this set through a _continuous_ $f: RR -> RR$ is a very important problem in statistics, we will derive the 2 most important and most used methods to do this: linear and polynomial regression. Both are based on the least squares minimization problem, so an algebraical approach is used and on later sections, we will build some algorithms to better visualize both methods
 
-== Linear Regression (a)
+= Linear Regression: The Least Squares Method (a)
 <section_simple_linear_regression>
 
-We have a set of equally spaced points $S := {t_i = i/m}, i = 0, 1, dots, m$, we will find the best _line_ $f(t) = alpha + beta t$ that approximates the points $(t_i, b_i) in RR^2$
+Given a dataset of equally spaced points $D := {t_i = i/m}, i = 0, 1, dots, m in RR$, linear regression consists of finding the best _line_ $f(t) = alpha + beta t$ that approximates the points $(t_i, b_i) in RR^2$, where $b_i$ are arbitrary
 
-The system of equations to be solved is to be given as a function of $t_i, b_i, m$.
-
-#text(weight: "bold")[Solution:]
-
-Approximating 2 points in $RR^2$ by a line is trivial, now approximating more than 2 points is a task that requires linear algebra. To see this, we will analyze the following example to build intuition for the general case:
+Approximating $2$ points in $RR^2$ by a line is trivial, now approximating more points is a task that requires linear algebra. To see this, we will analyze the following example to build intuition for the general case:
 
 #figure(
   image("least_squares_idea.png", width: 80%),
@@ -84,15 +69,15 @@ Approximating 2 points in $RR^2$ by a line is trivial, now approximating more th
   ],
 )
 
-Given the points $(1, 1), (2, 2), (3, 2) in RR^2$, we would like a _line_ $f(t) = y(t) = alpha + beta t$ that best approximates these 3 points, in other words, since we know that the line does not pass through all of the 3 points, we would like to find the _closest_ line to the line that would pass through the 3 points, so the system:
+Given the points $(1, 1), (2, 2), (3, 2) in RR^2$, we have $(t_1, b_1) = (1, 1), (t_2, b_2) = (2, 2), (t_3, b_3) = (3, 2) $ we would like a _line_ $f(t) = y(t) = alpha + beta t$ that best approximates $(t_i, b_i)$, in other words, since we know that the line does not pass through all 3 points, we would like to find the _closest_ line to #text(weight: "bold")[each point] of the dataset $D$, so the system:
 
 $
   f(1) = alpha + beta = 1\
   f(2) = alpha + 2 beta = 2\
-  f(3) = alpha + 3 beta = 2
+  f(3) = alpha + 3 beta = 2\
 $
 
-Clearly has no solution, (the line does not cross the 3 points), but it has a _closest solution_, which we can find through #text(weight: "bold")[projections], the system is:
+Which is:
 
 $
   underbrace(mat(
@@ -102,7 +87,9 @@ $
   ), A) dot underbrace(mat(alpha;beta), x) = underbrace(mat(1;2;2), b)
 $
 
-Let $x^* != x$ be a solution to the system, we want to #text(weight: "bold")[minimize] the error produced by approximating the points through a line, so if the #text(weight: "bold")[error] is $e = A x - b$, we want the smaller error _square_ possible (that is why least squares). We square the error to avoid and detect outliers, so:
+Clearly has no solution, (the line does not cross the 3 points), but it has a _closest solution_, which we can find through #text(weight: "bold")[minimizing] the errors produced by this approximation.
+
+Let $x^* != x$ be a solution to the system, let the error produced by approximating the points through a line be $e = A x - b$, we want the smaller error _square_ possible (that is why least squares). We square the error to avoid and detect outliers, so:
 
 $
   e_1^2 + e_2^2 + e_3^2
@@ -117,7 +104,7 @@ Is what we want to minimize, where $e_i$ is the error (distance) from the ith po
   ],
 )
 
-In this case, we will project this system into the column space of the matrix $A$, giving us the closest solution, and the least squares solutions is when $hat(x)$ minimizes $||A x - b||^2$, this occurs when the residual $e = A x - b$ is orthogonal to $C(A)$, since $N(A^T) perp C(A)$ and the dimensions sum up the left dimension of the matrix, so:
+So we will project $b$ into $C(A)$, giving us the closest solution, and the least squares solutions is when $hat(x)$ minimizes $||A x - b||^2$, this occurs when the residual $e = A x - b$ is orthogonal to $C(A)$, since $N(A^T) perp C(A)$ and the dimensions sum up the left dimension of the matrix, so by the well-known projection formula, we have:
 
 $
   A^T A hat(x) = A ^T b\
@@ -150,9 +137,9 @@ $ <system_1>
 Notice that with the _errors_ $e_i^2$ as:
 
 $
-  e_1^2 = (alpha + beta - 1)^2\
-  e_2^2 = (alpha + 2 beta - 2)^2\
-  e_3^2 = (alpha + 3 beta - 2)^2
+  e_1^2 = (f(t_1) - b_1)^2 = (f(1) - 1)^2 = (alpha + beta - 1)^2\
+  e_2^2 = (f(t_2) - b_2)^2 = (f(2) - 2)^2 = (alpha + 2 beta - 2)^2\
+  e_3^2 = (f(t_3) - b_2)^2 = (f(3) - 2)^2 = (alpha + 3 beta - 2)^2
 $
 
 The system in @system_1 is _precisely_ what is obtained after using partial derivatives to minimize the erros sum as a function of $(alpha, beta)$:
@@ -174,12 +161,7 @@ $
 
 If we have $n > 3$ points to approximate through a line, the reasoning is analogous:
 
-
-With $S := {t_i = i/m}, i = 0, 1, dots, m$, we will find the best _line_ $f(t) = alpha + beta t$ that approximates the points $(t_i, b_i) in RR^2$
-
-The system of equations to be solved be given as a function of $t_i, b_i, m$.
-
-We want to find the extended system as we did in @system_2, so our line is:
+Going back to $D$, we want to find the extended system as we did in @system_2, so let the best line be:
 $
   f(t) = alpha + beta t
 $
@@ -194,7 +176,7 @@ $
   f(1) = b_m = alpha + beta
 $
 
-And the $A x = b$ matrices alternative:
+Or:
 
 $
   underbrace(mat(
@@ -228,7 +210,7 @@ $
   )
 $
 
-So the new system to be solved is:
+So the system to find the optimal vector $vec(hat(alpha), hat(beta))$ is:
 
 $
   mat(
@@ -264,15 +246,11 @@ $
   )
 $
 
-Now we will discuss if this method is efficient, we will use #text(weight: "bold")[Conditioning Numbers] as 
+Now we will discuss if this method is efficient, using #text(weight: "bold")[Conditioning Numbers] as base.
 
-== The Condition number of a matrix
+= Condition of a Problem
 
-Conditioning numbers are very important in numerical analysis and to the efficiency of numerical procedures, given the sad fact that machines with infinite memory have not been built (yet), conditioning and stability are of unquantifiable importance
-
-=== The Conditioning number of a problem
-
-A _problem_ is usually described as a function $f: X -> Y$ from a #text(weight: "bold")[normed] vector space $X$ of data (it has to be normed so qe can _quantify_ data) and a _normed_ vector space $Y$ of solutions, $f$ is not always a well-behaved continuous function, which is why we are interested in #text(weight: "bold")[well-conditioned] problems and #text(weight: "bold")[ill-conditioned] problems, which we define:
+A _problem_ is usually described as a function $f: X -> Y$ from a #text(weight: "bold")[normed] vector space $X$ of data (it has to be normed so qe can _quantify_ data) and a _normed_ vector space $Y$ of solutions, $f$ is not always a well-behaved continuous function, which is why we are interested in #text(weight: "bold")[well-conditioned] problems and not in  #text(weight: "bold")[ill-conditioned] problems, which we define:
 
 #definition[(Well-Conditioned Problem)
   A problem $f:X -> Y$ is _well-conditioned_ at $x_0 in X$ $<=> forall epsilon > 0, exists delta > 0 |  ||x - x_0|| < delta => ||f(x) - f(x_0)|| < epsilon$.
@@ -280,7 +258,10 @@ A _problem_ is usually described as a function $f: X -> Y$ from a #text(weight: 
 
 This means that small perturbations in $x$ lead to small changes in $f(x)$, a problem is #text(weight: "bold")[ill-conditioned] if $f(x)$ can suffer huge changes with small changes in $x$.
 
-We usually say $f$ is well-conditioned if it is well-conditioned $forall x in X$, if thereis at least one $x_i$ in which the problem is ill-conditioned, then the whole problem is ill-conditioned.
+We usually say $f$ is well-conditioned if it is well-conditioned $forall x in X$, if there is at least one $x_i$ in which the problem is ill-conditioned, then we can use that whole problem is ill-conditioned.
+
+
+== The Condition number of a problem
 
 Conditioning numbers are a tool to quantify how well/ill conditioned a problem is:
 
@@ -304,7 +285,7 @@ $
   hat(kappa) = ||J(x)||,
 $ <absolute_conditioning_number__jacobian>
 
-=== The relative Conditioning Number
+== The relative Conditioning Number
 
 When, instead of analyzing the whole set $X$ of data, we are interested in _relative_ changes, we use the #text(weight: "bold")[relative condition number:]
 
@@ -333,7 +314,7 @@ Relative condition numbers are more useful than absolute conditioning numbers be
 Here are some examples of conditioning:
 
 #example[
-  Consider the problem of obtaining the scalar $x/2$ from $x in RR$, the function $f(x) = x/2)$ is differentiablke, so by @relative_condition_number_through_jacobian:
+  Consider the problem of obtaining the scalar $x/2$ from $x in RR$. The function $f(x) = x/2$ is differentiablle, so by @relative_condition_number_through_jacobian:
 
   $
     kappa(x) = (||J||) dot ((||f(x)||) / (||x||))^(-1) = (1/2) dot ((x/2) / x)^(-1) = 1.
@@ -357,7 +338,7 @@ This problem is well-conditioned ($kappa$ is small).
   This problem can be ill-conditioned if $|x_1 - x_2| approx 0$ ($kappa$ gets huge), and well-conditioned otherwise
 ].
 
-=== Conditioning Number of matrices
+== Condition Number of Matrices
 
 We will deduce the conditioning number of a matrix from the conditioning number of _matrix-vector_ multiplication:
 
@@ -378,7 +359,7 @@ This is a precise formula as a function of $(A, x)$.
 Suppose for a moment that $A$ is square and non-singular:
 
 #theorem[
-  For $x in RR^n, A in RR^(n times n), det(A) != 0$, the following holds:
+  $forall x in RR^n, A in RR^(n times n), det(A) != 0$, the following holds:
 
   $
       (||x||) / (||A x||) <= ||A^(-1)||
@@ -411,16 +392,18 @@ $
   alpha = (||x||) / (||A x||) dot (||A^(-1)||)^(-1)
 $ <end_proof>
 
-We can choose $x$ to make $alpha = 1$, and therefore $kappa = ||A|| dot ||A^(-1)||$.
+From @theorem_inequality_norms, we can choose $x$ to make $alpha = 1$, and therefore $kappa = ||A|| dot ||A^(-1)||$.
 
-Consider now the problem of calculating $A^(-1) b$ given $A$, mathematically it is identical to the problem we just considered, so the following has already been proven:
+Consider now the problem of calculating $A^(-1) b$ given $A in RR^(n times n)$. This is mathematically identical to the problem we just analyzed, so the following theorem has already been proven:
 
 #theorem[
-  Let $A in C^(n times n), det(A) != 0$, and consider $A x = b$, the problem of computing $b$, perturbating $x$ has conditioning number:
+  Let $A in RR^(n times n), det(A) != 0$, and consider the problem of computing $b$, from $A x = b$, by perturbating $x$. Then the following holds:
 
   $
     kappa = ||A|| (||x||) / (||b||) <= ||A|| dot ||A^(-1)||
   $
+  
+  Where $kappa$ is the condition number of the problem.
 ]
 
 #proof[
@@ -429,7 +412,7 @@ Consider now the problem of calculating $A^(-1) b$ given $A$, mathematically it 
 
 Finally, $||A|| dot ||A^(-1)||$ is so useful it has a name: #text(weight: "bold")[the condition number of A] (relative to the norm $||dot||$)
 
-If $A$ is singular, usually we wreite $kappa(A) = infinity$, notice that if $||dot|| = ||dot||_2$, then $||A|| = sigma_1$ and $||A^(-1)|| = 1/sigma_m$, so:
+If $A$ is singular, usually we wreite $kappa(A) = infinity$. Notice that if $||dot|| = ||dot||_2$, then $||A|| = sigma_1$ and $||A^(-1)|| = 1/sigma_m$, so:
 
 $
   kappa(A) = sigma_1 / sigma_m
@@ -437,7 +420,7 @@ $
 
 This is very useful, as we show an interesting application:
 
-=== Application (b)
+== Application (b)
 
 Still on least squares, using $||dot||_2$ the conditioning number of 
 @matrix_system_least_squares is:
@@ -488,13 +471,13 @@ Here are some python examples:
 == More Regression: A Polynomial Perspective (c)
 
 
-In this section we will discuss what changes when we decide to use #text(weight: "bold")[polynomials]  instead of #text(weight: "bold")[lines] to approximate our dataset (still on least squares):
+In this section we will discuss what changes when we decide to use #text(weight: "bold")[polynomials]  instead of #text(weight: "bold")[lines] to approximate our dataset:
 
 $
   f(t) = alpha + beta t -> p(t) = phi_0 + phi_1 t + dots + phi_n t^n
 $
 
-From a first perspective, it seems way more efficient to describe a dataset with many variables than with a simple line $alpha + beta t$, so let's use the same dataset $S := {(t_i,b_i), t_i = i/m}, i = 0, 1, dots, m$. Where $b_i$ is arbitrary, as we did in @section_simple_linear_regression, finding the new system to be solved:
+From a first perspective, it seems way more efficient to describe a dataset with many variables then to do so with a simple line $alpha + beta t$, so let's use the same dataset $S := {(t_i,b_i), t_i = i/m}, i = 0, 1, dots, m$. Where $b_i$ is arbitrary, as we did in @section_simple_linear_regression. Finding the new system to be solved gives us:
 
 $
   p(t_0 = 0) = b_0 = phi_0,\
@@ -521,7 +504,7 @@ $
   phi_0; phi_1; phi_2; dots.v; phi_n
  ), Phi_(n+1 times 1)) = underbrace(mat(
   b_0; b_1; b_2; dots.v; b_m
- ), b_(n + 1 times 1))
+ ), b_(m + 1 times 1))
 $
 
 Projecting into $C(A)$:
@@ -577,7 +560,7 @@ $
   )
 $ <matrix_system_polynomial_least_squares>
 
-Therefore the least squares _polynomial regression_ optimal solution is:
+Therefore the least squares _polynomial regression_ solution is:
 
 $
   mat(hat(phi_0); hat(phi_1); hat(phi_2); dots.v; hat(phi_n)) = mat(
@@ -591,7 +574,8 @@ $
   )
 $
 
-== How can one find the matrix A, given (m,n)?  (d)
+== Finding A, given (m,n)  (d)
+<poly_ls_section>
 
 Here we show a python-implemented function that calculates the matrix $A$ as a function of the dimensions $(m, n)$:
 
@@ -599,15 +583,126 @@ BOTAR A FUNÇÃO PYTHON
 
 == How Perturbations Affect The Condition Number of A (e)
 
-In this section we analyze what happens to $kappa(A)$, when $A$ is perturbated with $m = 100$ and $n = 1, dots, 20$
+In this section we analyze what happens to $kappa(A)$, when $A$ is perturbated with $m = 100$ and $n = 1, dots, 20$, the following graphs have been produced by the algorithm shown in BOTAR O ALGORITMO:
+
+BOTAR AS IMAGENS
+
 == A different dataset
-=== A Numerical Approach
+
+If we change $S := {(t_i, b_i) | t_i = i / m, i = 0, 1, dots, m}$ to $hat(S) = {(t_i, b_i) | t_i = i/m - 1/2}$, the polynomial regression becomes:
+
+$
+  p(t_0 = -1/2) = phi_0 + phi_1 (-1/2) + dots + phi_n (-1/2)^n = b_0\
+  p(t_1 = 1/m - 1/2) = phi_0 + phi_1 (1/m - 1/2) + phi_2 (1/m - 1/2)^2 + dots + phi_n (1/m - 1/2)^n\
+  dots.v\
+  p(t_m = 1 - 1/2) = phi_0 + phi_1 (1 - 1/2) + dots + phi_n (1 - 1/2)^n
+$
+
+So:
+
+$
+  underbrace(mat(
+    1, -1/2, (-1/2)^2, dots, (-1/2)^n;
+    1, (1/m - 1/2), (1/m - 1/2)^2, dots, (1/m - 1/2)^n;
+    1, (2/m - 1/2), (2/m - 1/2)^2, dots, (2/m - 1/2)^n;
+    dots.v, dots.v, dots.v, dots.v, dots.v;
+    1, (-1/2), (-1/2)^2, dots, (-1/2)^n
+  ), A) dot underbrace(mat(
+    phi_0; phi_1; dots.v; phi_n
+  ), Phi) = underbrace(mat(
+    b_0; b_1; dots.v; b_m
+  )
+  , b)
+$
+
+Projecting onto $C(A)$:
+
+$
+  underbrace(mat(
+    1, 1, 1, dots, 1;
+    -1/2, (1/m - 1/2), (2/m - 1/2), dots, -1/2;
+    (-1/2)^2, (1/m, - 1/2)^2, (2/m - 1/2)^2, dots, (-1/2)^2;
+    dots.v, dots.v, dots.v, dots.v, dots.v;
+    (-1/2)^n, (1/m - 1/2)^n , (2/m - 1/2)^n, dots, (-1/2)^n
+  ), A^T) dot underbrace(mat(
+    1, -1/2, (-1/2)^2, dots, (-1/2)^n;
+    1, (1/m - 1/2), (1/m - 1/2)^2, dots, (1/m - 1/2)^n;
+    1, (2/m - 1/2), (2/m - 1/2)^2, dots, (2/m - 1/2)^n;
+    dots.v, dots.v, dots.v, dots.v, dots.v;
+    1, -1/2, (-1/2)^2, dots, (-1/2)^n
+  ), A) dot underbrace(mat(
+    hat(phi_0); hat(phi_1); dots.v; hat(phi_n)
+  ), hat(Phi))\
+
+  = mat(
+    n + 1, sum_(i = 0)^n (i/m - 1/2), sum_(i = 0)^n (i/m - 1/2)^2, dots,  sum_(i = 0)^n (i/m - 1/2)^n;
+    sum_(i = 0)^n i/m - 1/2,sum_(i = 0)^n (i/m - 1/2)^2, sum_(i = 0)^n (i/m - 1/2)^3, dots, sum_(i = 0)^n (i/m - 1/2)^(n+1);
+    dots.v, dots.v, dots.v, dots.v, dots.v;
+    sum_(i = 0)^n (i/m - 1/2)^n, sum_(i = 0)^n (i/m - 1/2)^(n+1), sum_(i = 0)^n (i/m - 1/2)^(n+2), dots, sum_(i = 0)^n (i/m - 1/2)^(2n)
+  ) dot mat(
+    hat(phi_0);
+    hat(phi_1);
+    dots.v;
+    hat(phi_n)
+  )\
+
+  = mat(
+    1, 1, 1, dots, 1;
+    -1/2, (1/m - 1/2), (2/m - 1/2), dots, -1/2;
+    (-1/2)^2, (1/m, - 1/2)^2, (2/m - 1/2)^2, dots, (-1/2)^2;
+    dots.v, dots.v, dots.v, dots.v, dots.v;
+    (-1/2)^n, (1/m - 1/2)^n , (2/m - 1/2)^n, dots, (-1/2)^n
+  ) dot mat(
+    b_0; b_1; b_2; dots.v; b_m
+  ) = mat(
+    sum_(i = 0)^n b_i;
+    sum_(i = 0)^n (i/m - 1/2) b_i;
+    sum_(i = 0)^n (i/m - 1/2)^2 b_i;
+    dots.v;
+    sum_(i = 0)^n (i/m - 1/2)^n b_i
+  )
+$
+
+$therefore$ The least squares optimal solution $(hat(phi_0), hat(phi_1) , dots, hat(phi_n))$ is:
+
+$
+  mat(
+    n + 1, sum_(i = 0)^n (i/m - 1/2), dots,  sum_(i = 0)^n (i/m - 1/2)^n;
+    sum_(i = 0)^n i/m - 1/2, sum_(i = 0)^n (i/m - 1/2)^2,dots, sum_(i = 0)^n (i/m - 1/2)^(n+1);
+    dots.v, dots.v, dots.v, dots.v;
+    sum_(i = 0)^n (i/m - 1/2)^n, sum_(i = 0)^n (i/m - 1/2)^(n+1), dots, sum_(i = 0)^n (i/m - 1/2)^(2n)
+  )^(-1) dot mat(
+    sum_(i = 0)^n b_i;
+    sum_(i = 0)^n (i/m - 1/2) b_i;
+    sum_(i = 0)^n (i/m - 1/2)^2 b_i;
+    dots.v;
+    sum_(i = 0)^n (i/m - 1/2)^n b_i
+  )
+$ <new_dataset_polynomial_regression>
+
+We provide numerical examples in the next section for a better visualization of @new_dataset_polynomial_regression.
+
 === How Conditioning Changes (f)
 
+The following implementation uses code built in @poly_ls_section to showcase @new_dataset_polynomial_regression:
+
+BOTA A PORRA DO CODIGO
+
+
 = Some Algorithms 
+
+We have shown the solutions to the least squares problem $A x = b$, but this problem could be solved with factorizations of $A$, such as the QR and SVD, in the following sections we will define these factorizations and use them to solve the least squares problem.
+
 == The SVD and QR factorizations (a)
-=== The factorizations
-=== A Numerical Analysis (b)
+
+=== QR
+
+The QR factorization of $A in RR^(m times n)$ consists of decomposing the co
+
+=== SVD
+
+
+== A Python-Implementation
 == The polynomial approach: An efficiency analysis (c)
 
 
