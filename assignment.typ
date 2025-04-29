@@ -359,7 +359,7 @@ This is a precise formula as a function of $(A, x)$.
 Suppose for a moment that $A$ is square and non-singular:
 
 #theorem[
-  $forall x in RR^n, A in RR^(n times n), det(A) != 0$, the following holds:
+  $forall x in CC^n, A in CC^(n times n), det(A) != 0$, the following holds:
 
   $
       (||x||) / (||A x||) <= ||A^(-1)||
@@ -367,7 +367,7 @@ Suppose for a moment that $A$ is square and non-singular:
 ] <theorem_inequality_norms>
 
 #proof[
-  Since $forall A, B in RR^(n times n), ||A B || <= ||A|| ||B||$, we have:
+  Since $forall A, B in CC^(n times n), ||A B || <= ||A|| ||B||$, we have:
 
   $
     ||A A^(-1) x || <= ||A x|| ||A^(-1)|| <=> (||x||) / (||A x||) <= ||A^(-1)||
@@ -394,10 +394,10 @@ $ <end_proof>
 
 From @theorem_inequality_norms, we can choose $x$ to make $alpha = 1$, and therefore $kappa = ||A|| dot ||A^(-1)||$.
 
-Consider now the problem of calculating $A^(-1) b$ given $A in RR^(n times n)$. This is mathematically identical to the problem we just analyzed, so the following theorem has already been proven:
+Consider now the problem of calculating $A^(-1) b$ given $A in CC^(n times n)$. This is mathematically identical to the problem we just analyzed, so the following theorem has already been proven:
 
 #theorem[
-  Let $A in RR^(n times n), det(A) != 0$, and consider the problem of computing $b$, from $A x = b$, by perturbating $x$. Then the following holds:
+  Let $A in CC^(n times n), det(A) != 0$, and consider the problem of computing $b$, from $A x = b$, by perturbating $x$. Then the following holds:
 
   $
     kappa = ||A|| (||x||) / (||b||) <= ||A|| dot ||A^(-1)||
@@ -693,16 +693,142 @@ BOTA A PORRA DO CODIGO
 
 We have shown the solutions to the least squares problem $A x = b$, but this problem could be solved with factorizations of $A$, such as the QR and SVD, in the following sections we will define these factorizations and use them to solve the least squares problem.
 
-== The SVD and QR factorizations (a)
+== The SVD and QR factorizations 
 
 === QR
+<section_QR_decomposition>
 
-The QR factorization of $A in RR^(m times n)$ consists of decomposing the co
+The QR factorization of $A in CC^(m times n)$ consists of decomposing the co
 
 === SVD
+<section_SVD_decompositon>
+
+The _singular value decomposition_  of a matrix is based on the fact that the image of the unit sphere under a $m times n$ matrix is a #text(weight: "bold")[hyperellipse:]
+
+#figure(
+  image("hyperellipse.png", width: 80%),
+  caption: [
+    SVD of a $2 times 2$ matrix
+  ],
+)
 
 
-== A Python-Implementation
+
+So the independent directions $v_1, v_2$ have been mapped to another set of orthogonal directions $sigma_1 v_1, sigma_2 v_2$, so with $S:= {v in CC^n | ||v|| = 1}$ as the unit ball,  let's define:
+
+#definition[(Singular Values)
+  The $n$ _singular values_ $sigma_i$ of $A in CC(m times n)$ are the lengths of the $n$ new axes of $A S$, written in non-crescent order $sigma_1 >= dots >= sigma_n$.
+]<definition_singular_values>
+
+#definition[(Left Singular Vectors)
+  The $n$ #text(weight: "bold")[left] singular vectors of $A$ are the unit vectors $u_i$ laying in $A S$, oriented to correspond and  number  the singular values $sigma_i$, respectively
+]<definition_left_singular_vectors>
+
+#definition[(Right Singular Vectors)
+  The #text(weight: "bold")[right] singular vectors of $A$ are the $v_i$ in $S$ that are the preimages of $sigma_i u_i in A S$, such that $A v_i = sigma_i u_i$
+]<definition_right_singular_vectors>
+
+The equation $A v_i = sigma_i u_i$ is equivalent to:
+
+$
+ A dot mat(
+    ,,,;
+    v_1, v_2, dots, v_n;
+    ,
+  ) = mat(
+    ,,,;
+    sigma_1 u_1, sigma_2 u_2, dots, sigma_n u_n;
+    ,
+  )
+$
+
+Better:
+
+$
+  A dot mat(
+    ,,,;
+    v_1, v_2, dots, v_n;
+    ,
+  ) = mat(
+    ,,,;
+    u_1, u_2, dots, u_n;
+    ,
+  ) dot mat(
+    sigma_1,0 ,dots,0;
+    0, sigma_2, dots, 0;
+    dots.v, dots.v, dots.v, dots.v;
+    0, 0, dots, sigma_n
+  )
+$
+
+Or simple $A V = U Sigma$, but since $V$ has orthonormal columns:
+
+$
+  A = U Sigma V^*
+$<SVD_equation>
+
+
+The SVD is a very particular factorization for matrices, as the following theorem states:
+
+#theorem[(Existence of SVD)
+  _Every_ matrix $A in CC^(m times n)$ has a singular value decomposition
+]
+
+#proof[
+  We proceed by fixing the largest image of $A$ and using induction on the dimension of $A$:
+
+  Let $sigma_1 = ||A||_2$. There must exist unitary vectors $u_1, v_1 in CC^n$ such that $A v_1 = sigma_1 u_1$. PROVAR ESSA PORRA DIREITO
+]
+
+Is the SVD factorization of A. There are more about the SVD on computing $U, Sigma, V^*$, as we will show below:
+
+#theorem[
+  $forall A in CC^(m times n)$, the following holds:
+  
+  - The eigenvalues of $A^*A$ are the singular values _squared_ of $A$, and the column-eigenvectors of $A^*A$ form the matrix $V$.
+
+  - The eigenvalues of $A A^*$ are the singular values _squared_ of $A$, and the column-eigenvectors of $A A^*$ form the matrix $U$.
+]<theorem_eigencalculation_of_svd>
+
+#proof[
+  PROVA ESSA PORRA DIREITO
+]
+
+By @theorem_eigencalculation_of_svd, calculating the SVD of $A$ has been reduced to calculating the eigenvalues and eigenvectors of $A^* A$ and $A A^*$, here are some examples of singular value decompositions:
+
+BOTA AS PORRA DOS EXEMPLO
+
+#example[
+
+]
+
+#example[
+
+]
+
+#example[
+
+]
+
+== A Python-Implementation and a Conditioning Analysis (b)
+<section_python_qr_svd>
+
+Here we will solve the least squares problem usig the 2 factorizations shown in @section_QR_decomposition and @section_SVD_decompositon, as well as the ordinary approach to least squares shown in @section_simple_linear_regression.
+
+We will also use these algorithms to do linear regression on the simple functions $f, g, h: RR -> RR$ defined as:
+
+$
+  f(t) = sin(t)\
+  g(t) = e^t\
+  h(t) = cos(3t)
+$ <functions_to_be_numerically_analysed>
+
+BOTA OS CODIGO
+
 == The polynomial approach: An efficiency analysis (c)
+
+Here we will analyse what happens when we do _polynomial_ regression with the tools shown in @section_python_qr_svd. The same functions of @functions_to_be_numerically_analysed will be used here, with polynomials of degree up to $n = 15$:
+
+BOTA AS PORRA DOS CODIGO
 
 
