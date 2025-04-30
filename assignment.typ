@@ -31,6 +31,8 @@
 #let example = thmplain("example", "Example").with(numbering: "1.")
 #let proof = thmproof("proof", "Proof")
 
+#let span = "span"
+
 #align(center, text(21pt)[
   Assignment 2 - Numerical Linear Algebra
 ])
@@ -285,7 +287,7 @@ $
   hat(kappa) = ||J(x)||,
 $ <absolute_conditioning_number__jacobian>
 
-== The relative Conditioning Number
+== The Relative Conditioning Number
 
 When, instead of analyzing the whole set $X$ of data, we are interested in _relative_ changes, we use the #text(weight: "bold")[relative condition number:]
 
@@ -300,7 +302,7 @@ When, instead of analyzing the whole set $X$ of data, we are interested in _rela
 Or, as we did in @definition_absolute_conditioning_number, assuming that $delta f$ and $delta x$ are infinitesimal:
 
 $
-  kappa(x) = sup_(delta x)) ((||delta f||) / (||f(x)||)) dot ((||delta x||) / (||x||))^(-1)
+  kappa(x) = sup_(delta x) ((||delta f||) / (||f(x)||)) dot ((||delta x||) / (||x||))^(-1)
 $
 
 If $f$ is differentiable:
@@ -342,13 +344,13 @@ This problem is well-conditioned ($kappa$ is small).
 
 We will deduce the conditioning number of a matrix from the conditioning number of _matrix-vector_ multiplication:
 
-Consider the problem of obtaining $A x$ given $A in CC^(m times n)$, we will calculate the relative condition number with respect to perturbations in $x$, directly from @definition_relative_condition_number, we have:
+Consider the problem of obtaining $A x$ given $A in CC^(m times n)$. We will calculate the relative condition number with respect to perturbations on $x$. Directly from @definition_relative_condition_number, we have:
 
 $
   kappa = sup_(delta x) (||A (x + delta x) - A x||) / (||A x||) dot ((||delta x||) / (||x||))^(-1) = sup_(delta x) (||A delta x||) / (||delta x||) dot ((||A x||) / (||x||))^(-1)
 $ <beginning_proof>
 
-Since $sup_(delta x) (||A delta x||) / (||delta x||) = ||A|| $, we have:
+Since $sup_(forall x) (||A delta x||) / (||delta x||) = ||A|| $, we have:
 
 $
   kappa = ||A|| dot (||x||) / (||A x||)
@@ -356,7 +358,7 @@ $ <condition_number_of_matrix_vector_multiplication>
 
 This is a precise formula as a function of $(A, x)$.
 
-Suppose for a moment that $A$ is square and non-singular:
+The following theorem will be useful in a near future:
 
 #theorem[
   $forall x in CC^n, A in CC^(n times n), det(A) != 0$, the following holds:
@@ -410,9 +412,9 @@ Consider now the problem of calculating $A^(-1) b$ given $A in CC^(n times n)$. 
   Read from @beginning_proof to @end_proof.
 ]
 
-Finally, $||A|| dot ||A^(-1)||$ is so useful it has a name: #text(weight: "bold")[the condition number of A] (relative to the norm $||dot||$)
+Finally, $||A|| dot ||A^(-1)||$ is so useful it has a name: #text(weight: "bold")[the condition number of A] (relative to the norm $norm(dot)$)
 
-If $A$ is singular, usually we wreite $kappa(A) = infinity$. Notice that if $||dot|| = ||dot||_2$, then $||A|| = sigma_1$ and $||A^(-1)|| = 1/sigma_m$, so:
+If $A$ is singular, usually we write $kappa(A) = infinity$. Notice that if $||dot|| = ||dot||_2$, then $||A|| = sigma_1$ and $||A^(-1)|| = 1/sigma_m$, so:
 
 $
   kappa(A) = sigma_1 / sigma_m
@@ -462,9 +464,45 @@ $
   = sqrt(((8m + 1) + sqrt(52m^2-  8m + 1)) / ((8m + 1) - sqrt(52m^2-  8m + 1)))
 $
 
-When $m -> infinity$: COLOCAR O LIMITE
+We can calculate $lim_oo kappa(A)$ to approximate the condition number for huge values of $m$:
 
-Here are some python examples:
+$
+  lim_(m -> oo) kappa(A) = lim_(m -> oo) sqrt(((8m + 1) + sqrt(52m^2-  8m + 1)) / ((8m + 1) - sqrt(52m^2-  8m + 1)))\
+$
+
+Multiplying by the conjugate of the denominator and ignoring the square root (it is irelevant for the limit):
+
+$
+  = lim_(m -> oo) [ ((8m + 1) + sqrt(52m^2-  8m + 1)) / ((8m + 1) - sqrt(52m^2 - 8m + 1)) dot ((8m + 1) + sqrt(52m^2 - 8m + 1)) / ((8m + 1) + sqrt(52m^2 - 8m + 1))]\
+
+  = lim_(m -> oo) (((8m + 1) + sqrt(52m^2 - 8m + 1))^2) / ((8m + 1)^2 - 52m^2 - 8m + 1)\
+
+  = lim_(m -> oo) ((8m + 1)^2 + 2(8m + 1)sqrt(52m^2 - 8m + 1) + (52m^2 - 8m + 1)) / ((8m + 1)^2 - (52m^2 - 8m + 1))\
+
+  = lim_(m -> oo) (64 m^2 + 16 m + 1 + (16m + 1) sqrt(52m^2 - 8m + 1) + 52 m^2 - 8 m + 1) / (64 m^2 + 16 m + 1 - 52m^2 + 8m - 1)\
+$
+
+Now we regret having ignored the square root, so we put it back:
+
+$
+  = lim_(m -> oo) sqrt((((8m + 1) + sqrt(52m^2 - 8m + 1))^2) / (12 m^2 + 24 m))\
+
+  = lim_(m -> oo) ((8m + 1) + sqrt(52m^2 - 8m + 1)) / (sqrt(12 m^2 + 24 m))\
+
+  = lim_(m -> oo) (8m + 1 + m sqrt(52 - 8/m + 1/m^2)) / (m sqrt(12 + 24/m))\
+
+  = lim_(m -> oo) (m(8 + 1/m + sqrt(52 - 8/m + 1/m^2))) / (m sqrt(12 + 24/m))\
+
+  = lim_(m -> oo) (8 + 1/m + sqrt(52 - 8/m + 1/m^2)) / (sqrt(12 + 24/m))\
+$
+
+And finally:
+
+$
+  lim_(m -> oo) kappa(A) = (8 + sqrt(52)) / sqrt(12) = (4 + sqrt(13)) / sqrt(3)  
+$
+
+Here are some python plots of this approximation:
 
 (COLOCA AS PORRA DOS EXEMPLO)
 
@@ -583,7 +621,7 @@ BOTAR A FUNÇÃO PYTHON
 
 == How Perturbations Affect The Condition Number of A (e)
 
-In this section we analyze what happens to $kappa(A)$, when $A$ is perturbated with $m = 100$ and $n = 1, dots, 20$, the following graphs have been produced by the algorithm shown in BOTAR O ALGORITMO:
+In this section we analyze what happens to $kappa(A)$, when $A$ is perturbated with $m = 100$ and $n = 1, dots, 20$. The following graphs have been produced by the algorithm shown in BOTAR O ALGORITMO:
 
 BOTAR AS IMAGENS
 
@@ -698,7 +736,144 @@ We have shown the solutions to the least squares problem $A x = b$, but this pro
 === QR
 <section_QR_decomposition>
 
-The QR factorization of $A in CC^(m times n)$ consists of decomposing the co
+
+The QR factorization of a full-rank $A in CC^(m times n)$, $m >= n$ an consists of finding orthonormal vectors $q_1, dots, q_n$ such that $q_1, dots, q_i$ spans $a_1, dots, q_1$, where $a_i$ is the ith-column of $A$. So we want:
+
+$
+  span(a_1) = span(q_1)\
+  span(a_1, a_2) = span(q_1, q_2)\
+  dots.v\
+  span(a_1, dots, a_n) = span(q_1, dots, q_n)
+$
+
+This is equivalent to:
+
+$
+  A = mat(
+    ,,;
+    q_1, dots, q_n;
+    ,,
+  ) dot mat(
+    r_11, r_12, dots, r_(1 n);
+    ,r_22, dots, r_(2 n);
+    , , dots.v, dots.v;
+    ,,,r_(n n)
+  )
+$ <equation_open_reduced_QR>
+
+Where $r_(i i) != 0$, because $a_i$ will be expressed as a linear combination of $q_i$, and since the triangular matrix is invertible, $q_i$ can be expressed as a linear combination of $a_i$. Therefore @equation_open_reduced_QR is:
+
+$
+  a_1 = q_1 r_11,\
+  a_2 = r_12 q_1 + r_22 q_2,\
+  dots.v\
+  a_n = r_(1 n) q_1 + r_(2 n) q_2 + dots + r_(n n) q_n.
+$
+
+Or:
+
+$
+  A = hat(Q) hat(R)
+$ <equation_closed_reduced_QR>
+
+Is the _reduced_ QR decomposition of $A$.
+
+The _full_ QR decomposition of $A in CC^(m times n)$ not of full-rank is analogous to the reduced, but $|m - n|$ 0-columns are appended to $hat(Q)$ to make it a unitary $m times m$ matrix $Q$, and 0-rows are aded to $hat(R)$ to make it a $m times n$ still triangular matrix:
+
+#figure(
+  image("full_qr.png", width: 60%),
+  caption: [
+    Full QR factorization
+  ],
+)
+<figure_full_qr>
+
+
+And the decomposition becomes:
+
+$
+  A = Q R
+$
+
+Here are some examples:
+
+#example[
+  $
+    A = mat(
+      1, 2, 3;
+      4, 5, 6;
+      7, 8, 9
+    ) = 
+      Q = mat(
+        1/sqrt(66), -7/sqrt(246), -2/15;
+        4/sqrt(66), 1/sqrt(246), -11/15;
+        7/sqrt(66), -5/sqrt(246), 8/15
+      ),
+
+      R = mat(
+        sqrt(66), 5 sqrt(66)/6, 4 sqrt(66)/3;
+        0, sqrt(246)/6, 5 sqrt(246)/6;
+        0, 0, 0
+      )
+    $
+
+    This can be verified by computing $Q R$ and checking that it equals $A$. You can also verify that $Q^T Q = I$, which shows that $Q$ has orthonormal columns.
+  ]
+
+  #example[
+    $
+      A = mat(
+      3, 0, 0;
+      0, 4, 0;
+      0, 0, 5
+      )
+    $
+
+    This is a diagonal matrix, so its QR factorization is particularly simple:
+    
+    $
+      Q = mat(
+      1, 0, 0;
+      0, 1, 0;
+      0, 0, 1
+      ),
+
+      R = mat(
+      3, 0, 0;
+      0, 4, 0;
+      0, 0, 5
+      )
+    $
+
+    With diagonal matrices, $Q$ is the identity matrix and $R = A$.
+  ]
+
+  #example[
+    $
+      A = mat(
+      1, 1;
+      1, 0;
+      0, 1
+      )
+    $
+
+    For this $3 times 2$ matrix, we compute the reduced QR factorization:
+
+    $
+      hat(Q) = mat(
+      1/sqrt(2), 0;
+      1/sqrt(2), -1/sqrt(2);
+      0, 1/sqrt(2)
+      ),
+
+      hat(R) = mat(
+      sqrt(2), 1/sqrt(2);
+      0, sqrt(2)/2
+      )
+    $
+
+    This is a reduced QR factorization where $hat(Q)$ is $3 times 2$. The full QR factorization would require extending $hat(Q)$ to a $3 times 3$ orthogonal matrix and adding a row of zeros to $hat(R)$ as shown in @figure_full_qr.
+  ]
 
 === SVD
 <section_SVD_decompositon>
@@ -711,8 +886,6 @@ The _singular value decomposition_  of a matrix is based on the fact that the im
     SVD of a $2 times 2$ matrix
   ],
 )
-
-
 
 So the independent directions $v_1, v_2$ have been mapped to another set of orthogonal directions $sigma_1 v_1, sigma_2 v_2$, so with $S:= {v in CC^n | ||v|| = 1}$ as the unit ball,  let's define:
 
@@ -777,7 +950,7 @@ The SVD is a very particular factorization for matrices, as the following theore
 #proof[
   We proceed by fixing the largest image of $A$ and using induction on the dimension of $A$:
 
-  Let $sigma_1 = ||A||_2$. There must exist unitary vectors $u_1, v_1 in CC^n$ such that $A v_1 = sigma_1 u_1$. PROVAR ESSA PORRA DIREITO
+  Let $sigma_1 = ||A||_2$. There must exist unitary vectors $u_1, v_1 in CC^n$ such that $A v_1 = sigma_1 u_1$. PROVA ESSA POPRRA DIREITO
 ]
 
 Is the SVD factorization of A. There are more about the SVD on computing $U, Sigma, V^*$, as we will show below:
@@ -796,18 +969,57 @@ Is the SVD factorization of A. There are more about the SVD on computing $U, Sig
 
 By @theorem_eigencalculation_of_svd, calculating the SVD of $A$ has been reduced to calculating the eigenvalues and eigenvectors of $A^* A$ and $A A^*$, here are some examples of singular value decompositions:
 
-BOTA AS PORRA DOS EXEMPLO
-
 #example[
-
+  Consider $A = mat(3, 2; 2, 3)$. Computing the SVD:
+  
+  First, find $A^* A = mat(13, 12; 12, 13)$ and calculate its eigenvalues:
+  $lambda_1 = 25, lambda_2 = 1$
+  
+  The singular values are $sigma_1 = 5, sigma_2 = 1$.
+  
+  The right singular vectors (eigenvectors of $A^* A$):
+  $V = mat(1/sqrt(2), 1/sqrt(2); 1/sqrt(2), -1/sqrt(2))$
+  
+  The left singular vectors (obtained from $A v_i = sigma_i u_i$):
+  $U = mat(1/sqrt(2), 1/sqrt(2); 1/sqrt(2), -1/sqrt(2))$
+  
+  Therefore, the SVD is:
+  $A = mat(1/sqrt(2), 1/sqrt(2); 1/sqrt(2), -1/sqrt(2)) dot mat(5, 0; 0, 1) dot mat(1/sqrt(2), 1/sqrt(2); 1/sqrt(2), -1/sqrt(2))^T$
 ]
 
 #example[
+  Consider a non-square matrix $A = mat(1, 1, 0; 0, 1, 1)$. For this $2 times 3$ matrix, for the SVD we do:
+  
+  
+  $
+    A^* A = mat(1, 1, 0; 1, 2, 1; 0, 1, 1)
+  $
+  
+  The eigenvalues of $A^* A$ are $lambda_1 = 3, lambda_2 = 1, lambda_3 = 0$, so the singular values are $sigma_1 = sqrt(3), sigma_2 = 1, sigma_3 = 0$
+  
+  The right singular vectors (eigenvectors of $A^* A$) are:
 
-]
+  $
+    V = mat(1/2, -1/sqrt(2), 1/2; 1/sqrt(2), 0, -1/sqrt(2); 1/2, 1/sqrt(2), 1/2)
+  $
+  
+  And now for $A A^*$:
 
-#example[
+  $
+    A A^* = mat(2, 1; 1, 2)
+  $ 
+  
+  The eigenvalues are $lambda_1 = 3, lambda_2 = 1$, so the singular values are $sigma_1 = sqrt(3), sigma_2 = 1$. The eigenvectors are:
 
+  $
+    U = mat(1/sqrt(2), 1/sqrt(2); 1/sqrt(2), -1/sqrt(2))
+  $
+  
+  Therefore, the full SVD is:
+
+  $
+    A = mat(1/sqrt(2), 1/sqrt(2); 1/sqrt(2), -1/sqrt(2)) dot mat(sqrt(3), 0, 0; 0, 1, 0) dot mat(1/2, -1/sqrt(2), 1/2; 1/sqrt(2), 0, -1/sqrt(2); 1/2, 1/sqrt(2), 1/2)^T
+  $
 ]
 
 == A Python-Implementation and a Conditioning Analysis (b)
