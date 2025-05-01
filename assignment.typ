@@ -1,5 +1,10 @@
 #import "@preview/ctheorems:1.1.3": *
 #import "@preview/plotst:0.2.0": *
+#import "@preview/codly:1.2.0": *
+#import "@preview/codly-languages:0.1.1": *
+#codly(languages: codly-languages)
+
+#show: codly-init.with()
 #show: thmrules.with(qed-symbol: $square$)
 
 #set heading(numbering: "1.1.")
@@ -31,6 +36,7 @@
 #let example = thmplain("example", "Example").with(numbering: "1.")
 #let proof = thmproof("proof", "Proof")
 
+//shortcuts
 #let span = "span"
 
 #align(center, text(21pt)[
@@ -45,7 +51,7 @@
 
 #align(center)[
   #set par(justify: true)
-  *Abstract* \
+  *Abstract*\
   We derive linear and polynomial regression in subsets of $RR$ and discuss the condition number of the associated matrices, numerical algorithms for the SVD and QR factorization are built and used on an efficiency analysis of the 3 methods to do linear or polynomial regression, stability of these algorirths is  mentioned and 
 ]
 
@@ -55,200 +61,7 @@
 
 = Introduction
 
-Given $D subset RR^2$, a dataset, approximating this set through a _continuous_ $f: RR -> RR$ is a very important problem in statistics, we will derive the 2 most important and most used methods to do this: linear and polynomial regression. Both are based on the least squares minimization problem, so an algebraical approach is used and on later sections, we will build some algorithms to better visualize both methods
-
-= Linear Regression: The Least Squares Method (a)
-<section_simple_linear_regression>
-
-Given a dataset of equally spaced points $D := {t_i = i/m}, i = 0, 1, dots, m in RR$, linear regression consists of finding the best _line_ $f(t) = alpha + beta t$ that approximates the points $(t_i, b_i) in RR^2$, where $b_i$ are arbitrary
-
-Approximating $2$ points in $RR^2$ by a line is trivial, now approximating more points is a task that requires linear algebra. To see this, we will analyze the following example to build intuition for the general case:
-
-#figure(
-  image("least_squares_idea.png", width: 80%),
-  caption: [
-    A glimpse into what we want to see
-  ],
-)
-
-Given the points $(1, 1), (2, 2), (3, 2) in RR^2$, we have $(t_1, b_1) = (1, 1), (t_2, b_2) = (2, 2), (t_3, b_3) = (3, 2) $ we would like a _line_ $f(t) = y(t) = alpha + beta t$ that best approximates $(t_i, b_i)$, in other words, since we know that the line does not pass through all 3 points, we would like to find the _closest_ line to #text(weight: "bold")[each point] of the dataset $D$, so the system:
-
-$
-  f(1) = alpha + beta = 1\
-  f(2) = alpha + 2 beta = 2\
-  f(3) = alpha + 3 beta = 2\
-$
-
-Which is:
-
-$
-  underbrace(mat(
-    1, 1;
-    1, 2;
-    1, 3
-  ), A) dot underbrace(mat(alpha;beta), x) = underbrace(mat(1;2;2), b)
-$
-
-Clearly has no solution, (the line does not cross the 3 points), but it has a _closest solution_, which we can find through #text(weight: "bold")[minimizing] the errors produced by this approximation.
-
-Let $x^* != x$ be a solution to the system, let the error produced by approximating the points through a line be $e = A x - b$, we want the smaller error _square_ possible (that is why least squares). We square the error to avoid and detect outliers, so:
-
-$
-  e_1^2 + e_2^2 + e_3^2
-$
-
-Is what we want to minimize, where $e_i$ is the error (distance) from the ith point to the line:
-
-#figure(
-  image("least_squares_with_errors.png", width: 80%),
-  caption: [
-    The errors (distances)
-  ],
-)
-
-So we will project $b$ into $C(A)$, giving us the closest solution, and the least squares solutions is when $hat(x)$ minimizes $||A x - b||^2$, this occurs when the residual $e = A x - b$ is orthogonal to $C(A)$, since $N(A^T) perp C(A)$ and the dimensions sum up the left dimension of the matrix, so by the well-known projection formula, we have:
-
-$
-  A^T A hat(x) = A ^T b\
-
-  = mat(
-    1, 1, 1;
-    1, 2, 3
-  ) dot mat(
-    1, 1;
-    1, 2;
-    1, 3
-  ) dot mat(alpha;beta) = mat(
-    3, 6;
-    6, 14
-  ) dot mat(alpha;beta)\
-
-  = mat(
-    3, 6;
-    6, 14
-  ) dot mat(1;2;3) = mat(5;11)
-$
-
-So the system to find $hat(x) = mat(hat(alpha);hat(beta))$ becomes:
-
-$ 
-  3 alpha + 5 beta = 5\
-  6 alpha + 14 beta = 11
-$ <system_1>
-
-Notice that with the _errors_ $e_i^2$ as:
-
-$
-  e_1^2 = (f(t_1) - b_1)^2 = (f(1) - 1)^2 = (alpha + beta - 1)^2\
-  e_2^2 = (f(t_2) - b_2)^2 = (f(2) - 2)^2 = (alpha + 2 beta - 2)^2\
-  e_3^2 = (f(t_3) - b_2)^2 = (f(3) - 2)^2 = (alpha + 3 beta - 2)^2
-$
-
-The system in @system_1 is _precisely_ what is obtained after using partial derivatives to minimize the erros sum as a function of $(alpha, beta)$:
-
-$
-  f(alpha, beta) = (alpha + beta - 1)^2 + (alpha + 2 beta - 2)^2 + (alpha + 3 beta - 2)^2\
-  = 3 alpha^2 + 14 beta^2 + 12 alpha beta - 10 alpha- 22 beta + 9,\
-
-  (diff f) / (diff alpha) = (diff f) / (diff beta) = 0 <=> 6 alpha + 12 d - 10 = 28 beta + 12 alpha - 22 = 0 <=> cases(
-    3c + 6d = 11, 6c + 14d = 11
-  )
-$ <system_2>
-
-This new system has a solution in $hat(alpha) = 2/3 , hat(beta) = 1/2$, so the equation of the optimal line, obtained through _linear regression_ (or least squares) is:
-
-$
-  y(t) = 2/3 + 1/2 t.
-$
-
-If we have $n > 3$ points to approximate through a line, the reasoning is analogous:
-
-Going back to $D$, we want to find the extended system as we did in @system_2, so let the best line be:
-$
-  f(t) = alpha + beta t
-$
-
-That best approximates the points $(0, b_0), (1/m, b_1), dots , (1, b_m)$. The system is:
-
-$
-  f(0) = b_0 = alpha,\
-  f(1/m) = b_1 = alpha + beta/m,\
-  f(2/m) = b_2 = alpha + 2/m beta\
-  dots\
-  f(1) = b_m = alpha + beta
-$
-
-Or:
-
-$
-  underbrace(mat(
-    1, 0;
-    1, 1/m;
-    dots.v, dots.v;
-    1, 1
-  ), A) dot underbrace(mat(alpha;beta), x) = underbrace(mat(b_0; dots.v; b_m), b)
-$
-
-Projecting into $C(A)$, we have:
-
-$
-  A^T A x = A^T b\
-  = mat(1, 1, dots, 1; 0, 1/m, dots, 1) dot mat(
-    1, 0;
-    1, 1/m;
-    dots.v, dots.v;
-    1, 1
-  ) = mat(
-    m + 1, (m+1)/2;
-    (m+1)/2 , ((m+1)(2m+2))/(6 m)
-  ) dot mat(hat(alpha);hat(beta))\
-
-  = mat(
-    1, 1, dots, 1;
-    0, 1/m, dots, 1
-  ) dot mat(b_0; dots.v; b_m) = mat(
-    b_0 + b_2 + dots + b_m;
-    1/m [b_1 + 2 b_2 + dots + (m-1) b_(m-1) + b_m ]
-  )
-$
-
-So the system to find the optimal vector $vec(hat(alpha), hat(beta))$ is:
-
-$
-  mat(
-    m + 1, (m+1)/2;
-    (m+1)/2 , ((m+1)(2m+2))/(6 m)
-  ) dot mat(hat(alpha);hat(beta)) = mat(
-    b_0 + b_1 + dots + b_m;
-    1/m [b_1 + 2 b_2 + dots + (m-1) b_(m-1) + b_m ]
-  )
-$ <equation_with_AtransposeA>
-
-Or:
-
-$
-  mat(
-    m + 1, sum_(i = 1)^m t_i;
-    sum_(i = 1)^m t_i, sum_(i = 1)^m t_i^2;
-  ) dot mat(hat(alpha); hat(beta)) = mat(
-    sum_(i = 1)^m b_i;
-    sum_(i = 1)^m i/m dot b_i
-  )
-$ <matrix_system_least_squares>
-
-And the least squares optimal solution is:
-
-$
-  mat(hat(alpha); hat(beta)) = mat(
-    m + 1, sum_(i = 1)^m t_i;
-    sum_(i = 1)^m t_i, sum_(i = 1)^m t_i^2;
-  )^(-1) dot mat(
-    sum_(i = 1)^m b_i;
-    sum_(i = 1)^m i/m dot b_i
-  )
-$
-
-Now we will discuss if this method is efficient, using #text(weight: "bold")[Conditioning Numbers] as base.
+Given $D subset RR^2$, a dataset, approximating this set through a _continuous_ $f: RR -> RR$ is a very important problem in statistics, we will derive the 2 most important and most used methods to do this: linear and polynomial regression. Both are based on the least squares minimization problem. We will also discuss the conditioning number of the problems shown. A computational approach to regression is shown as well. We discuss how the condition number changes when the matrix is QR or SVD decomposed, and the algorithms for such decompositions are built.
 
 = Condition of a Problem
 
@@ -420,19 +233,280 @@ $
   kappa(A) = sigma_1 / sigma_m
 $
 
-This is very useful, as we show an interesting application:
+This is the condition number of $A$ with respect to the $2$-norm, which is the most used norm in practice. The condition number of a matrix is a measure of how sensitive the solution of a system of equations is to perturbations in the data. A large condition number indicates that the matrix is ill-conditioned, meaning that small changes in the input can lead to large changes in the output.
 
-== Application (b)
+= Linear Regression (1a)
+<section_simple_linear_regression>
 
-Still on least squares, using $||dot||_2$ the conditioning number of 
-@matrix_system_least_squares is:
+Given a dataset of equally spaced points $D := {t_i = i/m}, i = 0, 1, dots, m in RR$, linear regression consists of finding the best _line_ $f(t) = alpha + beta t$ that approximates the points $(t_i, b_i) in RR^2$, where $b_i$ are arbitrary
+
+Approximating $2$ points in $RR^2$ by a line is trivial, now approximating more points is a task that requires linear algebra. To see this, we will analyze the following example to build intuition for the general case:
+
+#figure(
+  image("least_squares_idea.png", width: 80%),
+  caption: [
+    A glimpse into what we want to see
+  ],
+)
+
+Given the points $(1, 1), (2, 2), (3, 2) in RR^2$, we have $(t_1, b_1) = (1, 1), (t_2, b_2) = (2, 2), (t_3, b_3) = (3, 2) $ we would like a _line_ $f(t) = y(t) = alpha + beta t$ that best approximates $(t_i, b_i)$, in other words, since we know that the line does not pass through all 3 points, we would like to find the _closest_ line to #text(weight: "bold")[each point] of the dataset $D$, so the system:
 
 $
-  kappa(A) = ||A||_2 dot ||A^(-1)||_2 = sigma_1 / sigma_m 
+  f(1) = alpha + beta = 1\
+  f(2) = alpha + 2 beta = 2\
+  f(3) = alpha + 3 beta = 2\
 $
 
-And the singular values $sigma_i$ are the square roots of the eigenvalues $lambda_i$ of $B = A^T A$ (non-crescent order), so from @equation_with_AtransposeA:
+Which is:
 
+$
+  underbrace(mat(
+    1, 1;
+    1, 2;
+    1, 3
+  ), A) dot underbrace(mat(alpha;beta), x) = underbrace(mat(1;2;2), b)
+$
+
+Clearly has no solution, (the line does not cross the 3 points), but it has a _closest solution_, which we can find through #text(weight: "bold")[minimizing] the errors produced by this approximation.
+
+Let $x^* != x$ be a solution to the system, let the error produced by approximating the points through a line be $e = A x - b$, we want the smaller error _square_ possible (that is why least squares). We square the error to avoid and detect outliers, so:
+
+$
+  e_1^2 + e_2^2 + e_3^2
+$
+
+Is what we want to minimize, where $e_i$ is the error (distance) from the ith point to the line:
+
+#figure(
+  image("least_squares_with_errors.png", width: 80%),
+  caption: [
+    The errors (distances)
+  ],
+)
+
+So we will project $b$ into $C(A)$, giving us the closest solution, and the least squares solutions is when $hat(x)$ minimizes $||A x - b||^2$, this occurs when the residual $e = A x - b$ is orthogonal to $C(A)$, since $N(A^T) perp C(A)$ and the dimensions sum up the left dimension of the matrix, so by the well-known projection formula, we have:
+
+$
+  A^T A hat(x) = A ^T b\
+
+  = mat(
+    1, 1, 1;
+    1, 2, 3
+  ) dot mat(
+    1, 1;
+    1, 2;
+    1, 3
+  ) dot mat(alpha;beta) = mat(
+    3, 6;
+    6, 14
+  ) dot mat(alpha;beta)\
+
+  = mat(
+    3, 6;
+    6, 14
+  ) dot mat(1;2;3) = mat(5;11)
+$
+
+So the system to find $hat(x) = mat(hat(alpha);hat(beta))$ becomes:
+
+$ 
+  3 alpha + 5 beta = 5\
+  6 alpha + 14 beta = 11
+$ <system_1>
+
+Notice that with the _errors_ $e_i^2$ as:
+
+$
+  e_1^2 = (f(t_1) - b_1)^2 = (f(1) - 1)^2 = (alpha + beta - 1)^2\
+  e_2^2 = (f(t_2) - b_2)^2 = (f(2) - 2)^2 = (alpha + 2 beta - 2)^2\
+  e_3^2 = (f(t_3) - b_2)^2 = (f(3) - 2)^2 = (alpha + 3 beta - 2)^2
+$
+
+The system in @system_1 is _precisely_ what is obtained after using partial derivatives to minimize the erros sum as a function of $(alpha, beta)$:
+
+$
+  f(alpha, beta) = (alpha + beta - 1)^2 + (alpha + 2 beta - 2)^2 + (alpha + 3 beta - 2)^2\
+  = 3 alpha^2 + 14 beta^2 + 12 alpha beta - 10 alpha- 22 beta + 9,\
+
+  (diff f) / (diff alpha) = (diff f) / (diff beta) = 0 <=> 6 alpha + 12 d - 10 = 28 beta + 12 alpha - 22 = 0 <=> cases(
+    3c + 6d = 11, 6c + 14d = 11
+  )
+$ <system_2>
+
+This new system has a solution in $hat(alpha) = 2/3 , hat(beta) = 1/2$, so the equation of the optimal line, obtained through _linear regression_ (or least squares) is:
+
+$
+  y(t) = 2/3 + 1/2 t.
+$
+
+If we have $n > 3$ points to approximate through a line, the reasoning is analogous:
+
+Going back to $D$, we want to find the extended system as we did in @system_2, so let the best line be:
+$
+  f(t) = alpha + beta t
+$
+
+That best approximates the points $(0, b_0), (1/m, b_1), dots , (1, b_m)$. The system is:
+
+$
+  f(0) = b_0 = alpha,\
+  f(1/m) = b_1 = alpha + beta/m,\
+  f(2/m) = b_2 = alpha + 2/m beta\
+  dots\
+  f(1) = b_m = alpha + beta
+$
+
+Or:
+
+$
+  underbrace(mat(
+    1, 0;
+    1, 1/m;
+    dots.v, dots.v;
+    1, 1
+  ), A) dot underbrace(mat(alpha;beta), x) = underbrace(mat(b_0; dots.v; b_m), b)
+$
+
+Projecting into $C(A)$, we have:
+
+$
+  A^T A x = A^T b\
+  = mat(1, 1, dots, 1; 0, 1/m, dots, 1) dot mat(
+    1, 0;
+    1, 1/m;
+    dots.v, dots.v;
+    1, 1
+  ) = mat(
+    m + 1, (m+1)/2;
+    (m+1)/2 , ((m+1)(2m+2))/(6 m)
+  ) dot mat(hat(alpha);hat(beta))\
+
+  = mat(
+    1, 1, dots, 1;
+    0, 1/m, dots, 1
+  ) dot mat(b_0; dots.v; b_m) = mat(
+    b_0 + b_2 + dots + b_m;
+    1/m [b_1 + 2 b_2 + dots + (m-1) b_(m-1) + b_m ]
+  )
+$
+
+So the system to find the optimal vector $vec(hat(alpha), hat(beta))$ is:
+
+$
+  mat(
+    m + 1, (m+1)/2;
+    (m+1)/2 , ((m+1)(2m+2))/(6 m)
+  ) dot mat(hat(alpha);hat(beta)) = mat(
+    b_0 + b_1 + dots + b_m;
+    1/m [b_1 + 2 b_2 + dots + (m-1) b_(m-1) + b_m ]
+  )
+$ <equation_with_AtransposeA>
+
+Or:
+
+$
+  underbrace(mat(
+    m + 1, sum_(i = 1)^m t_i;
+    sum_(i = 1)^m t_i, sum_(i = 1)^m t_i^2;
+  ), hat(A)) dot mat(hat(alpha); hat(beta)) = mat(
+    sum_(i = 1)^m b_i;
+    sum_(i = 1)^m i/m dot b_i
+  )
+$ <matrix_system_least_squares>
+
+And the least squares optimal solution is:
+
+$
+  mat(hat(alpha); hat(beta)) = mat(
+    m + 1, sum_(i = 1)^m t_i;
+    sum_(i = 1)^m t_i, sum_(i = 1)^m t_i^2;
+  )^(-1) dot mat(
+    sum_(i = 1)^m b_i;
+    sum_(i = 1)^m i/m dot b_i
+  )
+$
+
+= How the conditioning number of A changes (1b)
+
+We are interested in the condition number of linear regression, which is the condition number of the matrix $A$ in @matrix_system_least_squares. We will analyze how the condition number of $A$ changes with respect to perturbations $m$, the number of points in the dataset. A computational approach is appropriate.
+
+Here is a python code that numerically calculates many values of $kappa(A) = f(m)$ as a function of $m$:
+
+```python
+import numpy as np
+import matplotlib.pyplot as plt
+
+def cond_number(m):
+
+    """
+    Args:
+        m (float): parameter for the matrix A(m)
+    Returns:
+        float: condition number of A(m)
+    Raises:
+        ZeroDivisionError: if m = 0
+        np.linalg.LinAlgError: if A(m) is not invertible
+    """
+
+    A = np.array([
+        [m + 1,          (m + 1) / 2],
+        [(m + 1) / 2,  (m + 1)**2 / (3 * m)]
+    ])
+    A_inv = np.linalg.inv(A)
+    return np.linalg.norm(A, 2) * np.linalg.norm(A_inv, 2)
+
+def main(): 
+    M = float(input("Enter maximum m (M > 0): "))
+    N = int(input("Enter number of sample points: ")) #however the user wants to plot 
+
+    m_vals = np.linspace(0, M, N)
+    conds  = []
+
+    for m in m_vals:
+        try:
+            conds.append(cond_number(m))
+        except (ZeroDivisionError, np.linalg.LinAlgError):
+            conds.append(np.inf) #if it is not invertible
+
+    plt.figure()
+    plt.plot(m_vals, conds)
+    plt.xlabel('m')
+    plt.ylabel('Condition number κ₂(A)')
+    plt.title('Condition number of A(m) over [0, M]')
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show()
+
+if __name__ == "__main__":
+    main()
+```
+
+Good plots are:
+
+#figure(
+  image("condition_number.png", width: 80%),
+  caption: [
+    Condition number of A(m) over [0, 100]
+  ],
+) <condition_number_plot>
+
+#figure(
+  image("condition_number_2.png", width: 80%),
+  caption: [
+    Condition number of A(m) over [0, 10000]
+  ],
+) <condition_number_plot_2>
+
+
+It looks like it converges to a real number, we will evaluate this hypothesis below:
+
+Using $||dot||_2$ the conditioning number of $hat(A) = A^T A$ in @matrix_system_least_squares is:
+
+$
+  kappa(hat(A)) = norm(hat(A))_2 dot norm(hat(A)^(-1))_2 = sigma_1 / sigma_m 
+$
+
+Singular Values are better explored in @section_SVD_decompositon. Now we will calculate the singular values of $hat(A)$, which are the square roots of the eigenvalues of $hat(A)$ (see @theorem_eigencalculation_of_svd). So we have:
 $
   det(B - lambda I) = 0 <=> det(mat(
     m+1 - lambda , (m + 1) / 2;
@@ -448,7 +522,7 @@ $
   <=> lambda = (m+1)/(12m) [(8m + 1) plus.minus sqrt(52m^2-  8m + 1)]
 $
 
-So the singular values are:
+And the singular values are:
 
 $
   sigma_1 = sqrt(lambda_1) = sqrt((m+1)/(12m) [(8m + 1) + sqrt(52m^2-  8m + 1)]),\
@@ -456,15 +530,15 @@ $
   sigma_2 = sqrt(lambda_2) = sqrt((m+1)/(12m) [(8m + 1) - sqrt(52m^2-  8m + 1)])
 $
 
-And the condition number of the matrix $A$ is:
+This gives:
 
 $
   kappa(A) = sigma_1 / sigma_m = sqrt((m+1)/(12m) [(8m + 1) + sqrt(52m^2-  8m + 1)]) / sqrt((m+1)/(12m) [(8m + 1) - sqrt(52m^2-  8m + 1)])\
 
   = sqrt(((8m + 1) + sqrt(52m^2-  8m + 1)) / ((8m + 1) - sqrt(52m^2-  8m + 1)))
-$
+$ <condition_number_problem_b>
 
-We can calculate $lim_oo kappa(A)$ to approximate the condition number for huge values of $m$:
+And the limit as $m$ grows is:
 
 $
   lim_(m -> oo) kappa(A) = lim_(m -> oo) sqrt(((8m + 1) + sqrt(52m^2-  8m + 1)) / ((8m + 1) - sqrt(52m^2-  8m + 1)))\
@@ -502,12 +576,19 @@ $
   lim_(m -> oo) kappa(A) = (8 + sqrt(52)) / sqrt(12) = (4 + sqrt(13)) / sqrt(3)  
 $
 
-Here are some python plots of this approximation:
+A very good visualization of this is:
 
-(COLOCA AS PORRA DOS EXEMPLO)
+#figure(
+  image("desmos_condition_number.png", width: 60%),
+  caption: [
+    The purple line is the limit and the red is the function @condition_number_problem_b
+  ],
+) <condition_number_desmos_plot>
 
-== More Regression: A Polynomial Perspective (c)
 
+One could say that this problem is well conditioned, for $kappa(A_m) < (4 + sqrt(13)) / sqrt(3), forall m > 0$, and $(4 + sqrt(13)) / sqrt(3)$ is anot a very big number.
+
+= Polynomial Regression (1c)
 
 In this section we will discuss what changes when we decide to use #text(weight: "bold")[polynomials]  instead of #text(weight: "bold")[lines] to approximate our dataset:
 
@@ -515,7 +596,7 @@ $
   f(t) = alpha + beta t -> p(t) = phi_0 + phi_1 t + dots + phi_n t^n
 $
 
-From a first perspective, it seems way more efficient to describe a dataset with many variables then to do so with a simple line $alpha + beta t$, so let's use the same dataset $S := {(t_i,b_i), t_i = i/m}, i = 0, 1, dots, m$. Where $b_i$ is arbitrary, as we did in @section_simple_linear_regression. Finding the new system to be solved gives us:
+From a first perspective, it seems way more efficient to describe a dataset with many variables then to do so with a simple line $alpha + beta t$, so let's use the same dataset $S := {(t_i,b_i), t_i = i/m}, i = 0, 1, dots, m$. Where $b_i$ is arbitrary. As we did in @section_simple_linear_regression, finding the new system to be solved gives us:
 
 $
   p(t_0 = 0) = b_0 = phi_0,\
@@ -529,7 +610,7 @@ $
   p(t_m = 1) = b_m = phi_0 + dots + phi_n
 $
 
-And:
+Or:
 
 $
  underbrace(mat(
@@ -538,7 +619,7 @@ $
   1, 2/m, (2/m)^2, dots, (2/m)^n;
   dots.v, dots.v, dots.v, dots.v, dots.v;
   1, 1, 1, dots, 1
- ),A_(n+1 times n+1)) dot underbrace(mat(
+ ),A_(m+1 times n+1)) dot underbrace(mat(
   phi_0; phi_1; phi_2; dots.v; phi_n
  ), Phi_(n+1 times 1)) = underbrace(mat(
   b_0; b_1; b_2; dots.v; b_m
@@ -563,7 +644,7 @@ $
  ) dot mat(hat(phi_0); hat(phi_1); hat(phi_2); dots.v; hat(phi_n))\
 
  = mat(
-  n + 1, sum_(i = 1)^m i/m, sum_(i = 1)^m (i/m)^2, dots, sum_(i = 1)^m (i/m)^n;
+  m + 1, sum_(i = 1)^m i/m, sum_(i = 1)^m (i/m)^2, dots, sum_(i = 1)^m (i/m)^n;
   sum_(i = 1)^m i/m, sum_(i = 1)^m (i/m)^2, sum_(i = 1)^m (i/m)^3, dots, sum_(i = 1)^m (i/m)^(n+1);
   sum_(i = 1)^m (i/m)^2, sum_(i = 1)^m (i/m)^3, sum_(i = 1)^m (i/m)^4, dots, sum_(i = 1)^m (i/m)^n+2;
   dots.v, dots.v, dots.v, dots.v, dots.v;
@@ -588,7 +669,7 @@ So the system to be solved is:
 
 $
   mat(
-    n + 1, sum_(i = 1)^m i/m, dots, sum_(i = 1)^m (i/m)^n;
+    m+ 1, sum_(i = 1)^m i/m, dots, sum_(i = 1)^m (i/m)^n;
     sum_(i = 1)^m i/m, sum_(i = 1)^m (i/m)^2, dots, sum_(i = 1)^m (i/m)^(n+1);
     sum_(i = 1)^m (i/m)^2, sum_(i = 1)^m (i/m)^3, dots, sum_(i = 1)^m (i/m)^n+2;
     dots.v, dots.v, dots.v, dots.v;
@@ -602,7 +683,7 @@ Therefore the least squares _polynomial regression_ solution is:
 
 $
   mat(hat(phi_0); hat(phi_1); hat(phi_2); dots.v; hat(phi_n)) = mat(
-    n + 1, sum_(i = 1)^m i/m, dots, sum_(i = 1)^m (i/m)^n;
+    m + 1, sum_(i = 1)^m i/m, dots, sum_(i = 1)^m (i/m)^n;
     sum_(i = 1)^m i/m, sum_(i = 1)^m (i/m)^2, dots, sum_(i = 1)^m (i/m)^(n+1);
     sum_(i = 1)^m (i/m)^2, sum_(i = 1)^m (i/m)^3, dots, sum_(i = 1)^m (i/m)^n+2;
     dots.v, dots.v, dots.v, dots.v;
@@ -611,21 +692,80 @@ $
     sum_(i = 0)^m b_i; sum_(i = 0)^m (i b_i) / m; sum_(i = 0)^m (i/m)^2 m; dots.v; sum_(i = 0)^m (i/m)^n b_i
   )
 $
-
-== Finding A, given (m,n)  (d)
+= Computing the matrix A given (m,n) (1d)
 <poly_ls_section>
 
-Here we show a python-implemented function that calculates the matrix $A$ as a function of the dimensions $(m, n)$:
+Here is a python function that calculates the polynomial regression matrix from @matrix_system_polynomial_least_squares, given the dimensions $(m, n)$:
 
-BOTAR A FUNÇÃO PYTHON
+```python
+import numpy as np
 
-== How Perturbations Affect The Condition Number of A (e)
+def poly_ls(m, n):
+
+    """
+    Build the (n+1) x (n+1) matrix A for least-squares polynomial fitting.
+    
+    Args:
+        m (int): number of subintervals (m >= 0)
+        n (int): polynomial degree (n >= 0)
+    Returns:
+        np.ndarray: shape (n+1, n+1) Gram matrix
+    Raises:
+        ValueError: if m or n is negative or not integer
+    """
+
+    if not isinstance(m, int) or not isinstance(n, int):
+        raise ValueError("m and n must be integers")
+    if m < 0 or n < 0:
+        raise ValueError("m and n must be non-negative")
+
+    x = np.linspace(0, 1, m+1) #sample space
+
+    A = np.zeros((n+1, n+1), dtype=float) #intializes 0 matrix to be filled
+    np.set_printoptions(precision=3, suppress=True)
+    for j in range(n+1):
+        for k in range(n+1):
+            A[j, k] = np.sum(x**(j + k)) #fills each entry
+
+    return A
+
+for m, n in [(1, 1), (2, 2), (2, 3)]: #trivial examples
+    M = poly_ls(m, n)
+    print(f"m = {m}, n = {n}:")
+    print(M, end="\n\n")
+
+```
+
+Some simple cases are:
+
+$ 
+  A(1, 1) = mat(
+    2, 1;
+    1, 1
+  )\
+
+  A(2, 2) = mat(
+    3, 1.5, 1.25;
+    1.5,   1.25,  1.125;
+    1.25,  1.125, 1.062
+  )\
+
+  A(2, 3) = mat(
+    3, 1.5, 1.25, 1.125;
+    1.5,   1.25,  1.125, 1.062;
+    1.25,  1.125, 1.062, 1.031;
+    1.125, 1.062, 1.031, 1.016
+  )
+$
+
+= How Perturbations Affect The Condition Number of A (1e)
 
 In this section we analyze what happens to $kappa(A)$, when $A$ is perturbated with $m = 100$ and $n = 1, dots, 20$. The following graphs have been produced by the algorithm shown in BOTAR O ALGORITMO:
 
 BOTAR AS IMAGENS
 
-== A different dataset
+= Condition Analysis of a Different Dataset
+== A Different Dataset
 
 If we change $S := {(t_i, b_i) | t_i = i / m, i = 0, 1, dots, m}$ to $hat(S) = {(t_i, b_i) | t_i = i/m - 1/2}$, the polynomial regression becomes:
 
@@ -720,20 +860,17 @@ $ <new_dataset_polynomial_regression>
 
 We provide numerical examples in the next section for a better visualization of @new_dataset_polynomial_regression.
 
-=== How Conditioning Changes (f)
+== How Conditioning changes (1f)
 
-The following implementation uses code built in @poly_ls_section to showcase @new_dataset_polynomial_regression:
-
-BOTA A PORRA DO CODIGO
+BOTA AS PORRA DOS GRAFICO
 
 
-= Some Algorithms 
+= Least Squares with QR adn SVD decompositions
 
 We have shown the solutions to the least squares problem $A x = b$, but this problem could be solved with factorizations of $A$, such as the QR and SVD, in the following sections we will define these factorizations and use them to solve the least squares problem.
 
-== The SVD and QR factorizations 
 
-=== QR
+== QR
 <section_QR_decomposition>
 
 
@@ -875,7 +1012,7 @@ Here are some examples:
     This is a reduced QR factorization where $hat(Q)$ is $3 times 2$. The full QR factorization would require extending $hat(Q)$ to a $3 times 3$ orthogonal matrix and adding a row of zeros to $hat(R)$ as shown in @figure_full_qr.
   ]
 
-=== SVD
+== SVD
 <section_SVD_decompositon>
 
 The _singular value decomposition_  of a matrix is based on the fact that the image of the unit sphere under a $m times n$ matrix is a #text(weight: "bold")[hyperellipse:]
@@ -1022,10 +1159,12 @@ By @theorem_eigencalculation_of_svd, calculating the SVD of $A$ has been reduced
   $
 ]
 
-== A Python-Implementation and a Conditioning Analysis (b)
+== A Python-Implementation of Least Squares with Decompositions (2a)
 <section_python_qr_svd>
 
-Here we will solve the least squares problem usig the 2 factorizations shown in @section_QR_decomposition and @section_SVD_decompositon, as well as the ordinary approach to least squares shown in @section_simple_linear_regression.
+Here we will write code that solves the least squares problem usig the 2 factorizations shown in @section_QR_decomposition and @section_SVD_decompositon, as well as the ordinary approach to least squares shown in @section_simple_linear_regression.
+
+== Examples (2b)
 
 We will also use these algorithms to do linear regression on the simple functions $f, g, h: RR -> RR$ defined as:
 
@@ -1037,7 +1176,7 @@ $ <functions_to_be_numerically_analysed>
 
 BOTA OS CODIGO
 
-== The polynomial approach: An efficiency analysis (c)
+== The polynomial approach: An efficiency analysis (2c)
 
 Here we will analyse what happens when we do _polynomial_ regression with the tools shown in @section_python_qr_svd. The same functions of @functions_to_be_numerically_analysed will be used here, with polynomials of degree up to $n = 15$:
 
