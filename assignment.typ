@@ -284,10 +284,10 @@ Is what we want to minimize, where $e_i$ is the error (distance) from the ith po
   ],
 )
 
-So we will project $b$ into $C(A)$, giving us the closest solution, and the least squares solutions is when $hat(x)$ minimizes $||A x - b||^2$, this occurs when the residual $e = A x - b$ is orthogonal to $C(A)$, since $N(A^T) perp C(A)$ and the dimensions sum up the left dimension of the matrix, so by the well-known projection formula, we have:
+So we will project $b$ into $C(A)$, giving us the closest solution, and the least squares solutions is when $hat(x)$ minimizes $||A x - b||^2$, this occurs when the residual $e = A x - b$ is orthogonal to $C(A)$, since $N(A^*) perp C(A)$ and the dimensions sum up the left dimension of the matrix, so by the well-known projection formula, we have:
 
 $
-  A^T A hat(x) = A ^T b\
+  A^* A hat(x) = A ^* b\
 
   = mat(
     1, 1, 1;
@@ -370,7 +370,7 @@ $
 Projecting into $C(A)$, we have:
 
 $
-  A^T A x = A^T b\
+  A^* A x = A^* b\
   = mat(1, 1, dots, 1; 0, 1/m, dots, 1) dot mat(
     1, 0;
     1, 1/m;
@@ -402,7 +402,7 @@ $
   )
 $ <equation_with_AtransposeA>
 
-Or:
+Or, as a function of $t_i, b_i$ and $m$:
 
 $
   underbrace(mat(
@@ -427,6 +427,7 @@ $
 $
 
 = How the conditioning number of A changes (1b)
+<condition_number_linear_regression_system>
 
 We are interested in the condition number of linear regression, which is the condition number of the matrix $A$ in @matrix_system_least_squares. We will analyze how the condition number of $A$ changes with respect to perturbations $m$, the number of points in the dataset. A computational approach is appropriate.
 
@@ -439,6 +440,8 @@ import matplotlib.pyplot as plt
 def cond_number(m):
 
     """
+    This function computes the condition number of the matrix A(m) in the 2-norm. The matrix A is defined.
+
     Args:
         m (float): parameter for the matrix A(m)
     Returns:
@@ -498,9 +501,9 @@ Good plots are:
 ) <condition_number_plot_2>
 
 
-It looks like it converges to a real number, we will evaluate this hypothesis below:
+@condition_number_plot and @condition_number_plot_2 show us that it looks like $f(m) = kappa(A_m)$ converges to a real number, we will evaluate this hypothesis below:
 
-Using $||dot||_2$ the conditioning number of $hat(A) = A^T A$ in @matrix_system_least_squares is:
+Using $||dot||_2$ the conditioning number of $hat(A) = A^* A$ in @matrix_system_least_squares is:
 
 $
   kappa(hat(A)) = norm(hat(A))_2 dot norm(hat(A)^(-1))_2 = sigma_1 / sigma_m 
@@ -508,7 +511,7 @@ $
 
 Singular Values are better explored in @section_SVD_decompositon. Now we will calculate the singular values of $hat(A)$, which are the square roots of the eigenvalues of $hat(A)$ (see @theorem_eigencalculation_of_svd). So we have:
 $
-  det(B - lambda I) = 0 <=> det(mat(
+  det(hat(A) - lambda I) = 0 <=> det(mat(
     m+1 - lambda , (m + 1) / 2;
     (m + 1) / 2 , ((m + 1) (2m + 1)) / 6 - lambda
   )) = 0\ 
@@ -556,7 +559,7 @@ $
   = lim_(m -> oo) (64 m^2 + 16 m + 1 + (16m + 1) sqrt(52m^2 - 8m + 1) + 52 m^2 - 8 m + 1) / (64 m^2 + 16 m + 1 - 52m^2 + 8m - 1)\
 $
 
-Now we regret having ignored the square root, so we put it back:
+Regretting having ignored the square root, and putting it back, we have:
 
 $
   = lim_(m -> oo) sqrt((((8m + 1) + sqrt(52m^2 - 8m + 1))^2) / (12 m^2 + 24 m))\
@@ -586,7 +589,7 @@ A very good visualization of this is:
 ) <condition_number_desmos_plot>
 
 
-One could say that this problem is well conditioned, for $kappa(A_m) < (4 + sqrt(13)) / sqrt(3), forall m > 0$, and $(4 + sqrt(13)) / sqrt(3)$ is anot a very big number.
+@condition_number_desmos_plot shows the function approaching the limit. One could say that this problem is well conditioned, for $kappa(A_m) < (4 + sqrt(13)) / sqrt(3), forall m > 0$, and $(4 + sqrt(13)) / sqrt(3)$ is not a very big number. We will not go deep into the discussion of how well-condition this problem is, but we can say that the condition number of $A$ is not a problem for the linear regression algorithm.
 
 = Polynomial Regression (1c)
 
@@ -629,7 +632,7 @@ $
 Projecting into $C(A)$:
 
 $
-  A^T A hat(Phi) = mat(
+  A^* A hat(Phi) = mat(
     1, 1, 1, dots, 1;
     0, 1/m, 2/m, dots, 1;
     0, (1/m)^2, (2/m)^2, dots, 1;
@@ -646,7 +649,7 @@ $
  = mat(
   m + 1, sum_(i = 1)^m i/m, sum_(i = 1)^m (i/m)^2, dots, sum_(i = 1)^m (i/m)^n;
   sum_(i = 1)^m i/m, sum_(i = 1)^m (i/m)^2, sum_(i = 1)^m (i/m)^3, dots, sum_(i = 1)^m (i/m)^(n+1);
-  sum_(i = 1)^m (i/m)^2, sum_(i = 1)^m (i/m)^3, sum_(i = 1)^m (i/m)^4, dots, sum_(i = 1)^m (i/m)^n+2;
+  sum_(i = 1)^m (i/m)^2, sum_(i = 1)^m (i/m)^3, sum_(i = 1)^m (i/m)^4, dots, sum_(i = 1)^m (i/m)^(n+2);
   dots.v, dots.v, dots.v, dots.v, dots.v;
   sum_(i = 1)^m (i/m)^n, sum_(i = 1)^m (i/m)^(n+1), sum_(i = 1)^m (i/m)^(n+2), dots, sum_(i = 1)^m (i/m)^(2n)
  ) dot mat(hat(phi_0); hat(phi_1); hat(phi_2); dots.v; hat(phi_n))\
@@ -668,24 +671,24 @@ $
 So the system to be solved is:
 
 $
-  mat(
+  underbrace(mat(
     m+ 1, sum_(i = 1)^m i/m, dots, sum_(i = 1)^m (i/m)^n;
     sum_(i = 1)^m i/m, sum_(i = 1)^m (i/m)^2, dots, sum_(i = 1)^m (i/m)^(n+1);
-    sum_(i = 1)^m (i/m)^2, sum_(i = 1)^m (i/m)^3, dots, sum_(i = 1)^m (i/m)^n+2;
+    sum_(i = 1)^m (i/m)^2, sum_(i = 1)^m (i/m)^3, dots, sum_(i = 1)^m (i/m)^(n+2);
     dots.v, dots.v, dots.v, dots.v;
     sum_(i = 1)^m (i/m)^n, sum_(i = 1)^m (i/m)^(n+1), dots, sum_(i = 1)^m (i/m)^(2n)
- ) dot mat(hat(phi_0); hat(phi_1); hat(phi_2); dots.v; hat(phi_n)) = mat(
+ ), hat(A)) dot mat(hat(phi_0); hat(phi_1); hat(phi_2); dots.v; hat(phi_n)) = mat(
     sum_(i = 0)^m b_i; sum_(i = 0)^m (i b_i) / m; sum_(i = 0)^m (i/m)^2 m; dots.v; sum_(i = 0)^m (i/m)^n b_i
   )
 $ <matrix_system_polynomial_least_squares>
 
-Therefore the least squares _polynomial regression_ solution is:
+And the least squares _polynomial regression_ solution is:
 
 $
   mat(hat(phi_0); hat(phi_1); hat(phi_2); dots.v; hat(phi_n)) = mat(
     m + 1, sum_(i = 1)^m i/m, dots, sum_(i = 1)^m (i/m)^n;
     sum_(i = 1)^m i/m, sum_(i = 1)^m (i/m)^2, dots, sum_(i = 1)^m (i/m)^(n+1);
-    sum_(i = 1)^m (i/m)^2, sum_(i = 1)^m (i/m)^3, dots, sum_(i = 1)^m (i/m)^n+2;
+    sum_(i = 1)^m (i/m)^2, sum_(i = 1)^m (i/m)^3, dots, sum_(i = 1)^m (i/m)^(n+2);
     dots.v, dots.v, dots.v, dots.v;
     sum_(i = 1)^m (i/m)^n, sum_(i = 1)^m (i/m)^(n+1), dots, sum_(i = 1)^m (i/m)^(2n)
  )^(-1) dot mat(
@@ -760,9 +763,86 @@ $
 
 = How Perturbations Affect The Condition Number of A (1e)
 
-In this section we analyze what happens to $kappa(A)$, when $A$ is perturbated with $m = 100$ and $n = 1, dots, 20$. The following graphs have been produced by the algorithm shown in BOTAR O ALGORITMO:
+Still on polynomial regression, in this section we analyze what happens to $kappa(A)$, when $A$ is perturbated with $m = 100$ and $n = 1, dots, 20$.
 
-BOTAR AS IMAGENS
+We will run _poly_ls(m, n)_ built in @poly_ls_section for $m = 100$ and $n = 1, dots, 20$ and then numerically calculate the condition number of the matrices, the following code is used:
+
+```python
+import numpy as np
+import matplotlib.pyplot as plt
+
+def format_scientific(x, sig=3):
+
+    """
+    Formats a number in scientific notation with a specified number of significant digits.
+
+    Args:
+        x (float): number to format
+        sig (int): number of significant digits (default: 3)
+    Returns:
+        str: formatted string in scientific notation
+    """
+
+    if x == 0:
+        return "0"
+    exp = int(np.floor(np.log10(abs(x))))
+    mant = x / 10**exp
+    return f"{mant:.{sig}f} * 10^{exp}"
+
+def compute_condition_numbers(m, max_n):
+
+    """
+    Returns a list of the condition numbers of the polynomial least-squares matrix A(m) for degrees n = 1 to max_n.
+
+    Args:
+        m (int): number of subintervals (m >= 0)
+        max_n (int): maximum polynomial degree (max_n >= 0)
+    Returns:
+        list: condition numbers of A(m) for degrees n = 1 to max_n
+    """
+
+    conds = []
+    for n in range(1, max_n + 1):
+        A = poly_ls(m, n) 
+        sv = np.linalg.svd(A, compute_uv=False) #computes singular values
+        conds.append(sv[0] / sv[-1]) #condition number is the ratio of the largest to smallest singular value.
+    return conds
+
+if __name__ == "__main__":
+    m = 100
+    max_n = 20
+
+    cond_nums = compute_condition_numbers(m, max_n)
+    n_values = np.arange(1, max_n + 1)
+
+    print(f"Condition numbers of A (m={m}) for degree n:")
+    for n, c in zip(n_values, cond_nums):
+        print(f"  n = {n:2d} → κ₂(A) = {format_scientific(c)}")
+
+    plt.figure()
+    plt.semilogy(n_values, cond_nums, marker="o", linestyle="-")
+    plt.xlabel("Polynomial degree $n$")
+    plt.ylabel("Condition number $\\kappa(A)$")
+    plt.title(f"Growth of Condition Number, $m={m}$")
+    plt.grid(True, which="both", ls="--")
+    plt.tight_layout()
+    plt.show()
+```
+
+A good plot of the growth of the condition number is:
+
+#figure(
+  image("(m,n)condition_perturbation.png", width: 80%),
+  caption: [
+    Growth of the condition number of A(m) for polynomial regression
+  ],
+) <condition_number_perturbation_plot>
+
+@condition_number_perturbation_plot Shows that _magic_ happens
+
+
+
+
 
 = Condition Analysis of a Different Dataset
 == A Different Dataset
@@ -802,7 +882,7 @@ $
     (-1/2)^2, (1/m, - 1/2)^2, (2/m - 1/2)^2, dots, (-1/2)^2;
     dots.v, dots.v, dots.v, dots.v, dots.v;
     (-1/2)^n, (1/m - 1/2)^n , (2/m - 1/2)^n, dots, (-1/2)^n
-  ), A^T) dot underbrace(mat(
+  ), A^*) dot underbrace(mat(
     1, -1/2, (-1/2)^2, dots, (-1/2)^n;
     1, (1/m - 1/2), (1/m - 1/2)^2, dots, (1/m - 1/2)^n;
     1, (2/m - 1/2), (2/m - 1/2)^2, dots, (2/m - 1/2)^n;
@@ -954,7 +1034,7 @@ Here are some examples:
       )
     $
 
-    This can be verified by computing $Q R$ and checking that it equals $A$. You can also verify that $Q^T Q = I$, which shows that $Q$ has orthonormal columns.
+    This can be verified by computing $Q R$ and checking that it equals $A$. You can also verify that $Q^* Q = I$, which shows that $Q$ has orthonormal columns.
   ]
 
   #example[
@@ -1121,7 +1201,7 @@ By @theorem_eigencalculation_of_svd, calculating the SVD of $A$ has been reduced
   $U = mat(1/sqrt(2), 1/sqrt(2); 1/sqrt(2), -1/sqrt(2))$
   
   Therefore, the SVD is:
-  $A = mat(1/sqrt(2), 1/sqrt(2); 1/sqrt(2), -1/sqrt(2)) dot mat(5, 0; 0, 1) dot mat(1/sqrt(2), 1/sqrt(2); 1/sqrt(2), -1/sqrt(2))^T$
+  $A = mat(1/sqrt(2), 1/sqrt(2); 1/sqrt(2), -1/sqrt(2)) dot mat(5, 0; 0, 1) dot mat(1/sqrt(2), 1/sqrt(2); 1/sqrt(2), -1/sqrt(2))^*$
 ]
 
 #example[
@@ -1155,7 +1235,7 @@ By @theorem_eigencalculation_of_svd, calculating the SVD of $A$ has been reduced
   Therefore, the full SVD is:
 
   $
-    A = mat(1/sqrt(2), 1/sqrt(2); 1/sqrt(2), -1/sqrt(2)) dot mat(sqrt(3), 0, 0; 0, 1, 0) dot mat(1/2, -1/sqrt(2), 1/2; 1/sqrt(2), 0, -1/sqrt(2); 1/2, 1/sqrt(2), 1/2)^T
+    A = mat(1/sqrt(2), 1/sqrt(2); 1/sqrt(2), -1/sqrt(2)) dot mat(sqrt(3), 0, 0; 0, 1, 0) dot mat(1/2, -1/sqrt(2), 1/2; 1/sqrt(2), 0, -1/sqrt(2); 1/2, 1/sqrt(2), 1/2)^*
   $
 ]
 
