@@ -33,6 +33,8 @@
 )
 #let definition = thmbox("definition", "Definition", inset: (x: 1.2em, top: 1em))
 
+#set math.mat(delim: "[")
+#set math.vec(delim: "[")
 #let example = thmplain("example", "Example").with(numbering: "1.")
 #let proof = thmproof("proof", "Proof")
 
@@ -100,7 +102,7 @@ $
   hat(kappa) = ||J(x)||,
 $ <absolute_conditioning_number__jacobian>
 
-== The Relative Conditioning Number
+== The Relative Condition Number
 
 When, instead of analyzing the whole set $X$ of data, we are interested in _relative_ changes, we use the #text(weight: "bold")[relative condition number:]
 
@@ -414,19 +416,9 @@ $
   )
 $ <matrix_system_least_squares>
 
-And the least squares optimal solution is:
+This provides the optimal vector $hat(x)$ that minimizes the least squares error, which is the solution to the linear regression problem.
 
-$
-  mat(hat(alpha); hat(beta)) = mat(
-    m + 1, sum_(i = 1)^m t_i;
-    sum_(i = 1)^m t_i, sum_(i = 1)^m t_i^2;
-  )^(-1) dot mat(
-    sum_(i = 1)^m b_i;
-    sum_(i = 1)^m i/m dot b_i
-  )
-$
-
-= How the conditioning number of A changes (1b)
+= How the condition number of A changes (1b)
 <condition_number_linear_regression_system>
 
 We are interested in the condition number of linear regression, which is the condition number of the matrix $A$ in @matrix_system_least_squares. We will analyze how the condition number of $A$ changes with respect to perturbations $m$, the number of points in the dataset. A computational approach is appropriate.
@@ -682,20 +674,9 @@ $
   )
 $ <matrix_system_polynomial_least_squares>
 
-And the least squares _polynomial regression_ solution is:
+This gives the optimal vector $hat(Phi)$ that minimizes the least squares error. We will use computational methods to analyze this system in some of the next sections.
 
-$
-  mat(hat(phi_0); hat(phi_1); hat(phi_2); dots.v; hat(phi_n)) = mat(
-    m + 1, sum_(i = 1)^m i/m, dots, sum_(i = 1)^m (i/m)^n;
-    sum_(i = 1)^m i/m, sum_(i = 1)^m (i/m)^2, dots, sum_(i = 1)^m (i/m)^(n+1);
-    sum_(i = 1)^m (i/m)^2, sum_(i = 1)^m (i/m)^3, dots, sum_(i = 1)^m (i/m)^(n+2);
-    dots.v, dots.v, dots.v, dots.v;
-    sum_(i = 1)^m (i/m)^n, sum_(i = 1)^m (i/m)^(n+1), dots, sum_(i = 1)^m (i/m)^(2n)
- )^(-1) dot mat(
-    sum_(i = 0)^m b_i; sum_(i = 0)^m (i b_i) / m; sum_(i = 0)^m (i/m)^2 m; dots.v; sum_(i = 0)^m (i/m)^n b_i
-  )
-$
-= Computing the matrix A given (m,n) (1d)
+= Computing the polynomial regression matrix A given (m,n) (1d)
 <poly_ls_section>
 
 Here is a python function that calculates the polynomial regression matrix from @matrix_system_polynomial_least_squares, given the dimensions $(m, n)$:
@@ -844,7 +825,7 @@ A good plot of the growth of the condition number is:
 
 
 
-= Condition Analysis of a Different Dataset
+= Polynomial Regression with a Different Dataset 
 == A Different Dataset
 
 If we change $S := {(t_i, b_i) | t_i = i / m, i = 0, 1, dots, m}$ to $hat(S) = {(t_i, b_i) | t_i = i/m - 1/2}$, the polynomial regression becomes:
@@ -945,9 +926,9 @@ We provide numerical examples in the next section for a better visualization of 
 BOTA AS PORRA DOS GRAFICO
 
 
-= Least Squares with QR adn SVD decompositions
+= Least Squares with QR and SVD decompositions
 
-We have shown the solutions to the least squares problem $A x = b$, but this problem could be solved with factorizations of $A$, such as the QR and SVD, in the following sections we will define these factorizations and use them to solve the least squares problem.
+We have shown the solutions to the least squares problem $A x = b$, but this problem could be solved with factorizations of $A$, such as the QR and SVD, in the following sections we will show these factorizations and use them to solve the least squares problem.
 
 
 == QR
@@ -1013,29 +994,6 @@ $
 $
 
 Here are some examples:
-
-#example[
-  $
-    A = mat(
-      1, 2, 3;
-      4, 5, 6;
-      7, 8, 9
-    ) = 
-      Q = mat(
-        1/sqrt(66), -7/sqrt(246), -2/15;
-        4/sqrt(66), 1/sqrt(246), -11/15;
-        7/sqrt(66), -5/sqrt(246), 8/15
-      ),
-
-      R = mat(
-        sqrt(66), 5 sqrt(66)/6, 4 sqrt(66)/3;
-        0, sqrt(246)/6, 5 sqrt(246)/6;
-        0, 0, 0
-      )
-    $
-
-    This can be verified by computing $Q R$ and checking that it equals $A$. You can also verify that $Q^* Q = I$, which shows that $Q$ has orthonormal columns.
-  ]
 
   #example[
     $
@@ -1165,9 +1123,62 @@ The SVD is a very particular factorization for matrices, as the following theore
 ]
 
 #proof[
-  We proceed by fixing the largest image of $A$ and using induction on the dimension of $A$:
+  We prove the existane by fixing the largest image of $A$ and using induction on the dimension of $A$:
 
-  Let $sigma_1 = ||A||_2$. There must exist unitary vectors $u_1, v_1 in CC^n$ such that $A v_1 = sigma_1 u_1$. PROVA ESSA POPRRA DIREITO
+  Let $sigma_1 = norm(A)_2$. There must exist unitary vectors $u_1, v_1 in CC^n$ such that $A v_1 = sigma_1 u_1$, with $norm(v_1)_2 = norm(u_1)_2 = 1.$ Let ${v_j}$ and ${u_j}$ be 2 orthonormal bases of $CC^n$. These column vectors form the unitary matrices $V_1$ and $U_1$. We will compute:
+
+  $
+    Phi = U_1^* A V_1
+  $ <equation_Phi_Ut_A_V_matrix>
+
+  Notice that the first column of $Phi$ is $U_1^* A v_1 = sigma_1 U_1^* v_1 = sigma_1 e_1$, since $u_1$ is the first column of $U_1$. So $Phi$ looks like:
+
+  $
+    Phi = mat(
+      sigma_1, w^*;
+      0, B
+    )
+  $
+
+  Where $w^*$ is the rest of the first row, the action of $A$ onto the remaining columns $v_j$. $B$ acts on the subspace orthogonal to $v_1$.
+
+  We want $w = 0$, we can force this by using the norm. We know that:
+
+  $
+    norm(mat(
+      sigma_1, w^*;
+      0, B
+    ) dot vec(sigma_1, w))_2 = norm(mat(
+      sigma_1^2 +  w^* w;
+      B w; 
+    ))_2 = sqrt(|sigma_1^2 + w^* w|^2 + norm(B w)_2^2)  
+  $
+
+  And:
+
+  $
+    sqrt(|sigma_1^2 + w^* w|^2 + norm(B w)_2^2) >= sigma_1^2 + w^* w
+  $
+
+  We also know:
+  
+  $
+   norm(Phi)_2 = sup_(norm(y) = 1) norm(Phi y)_2
+  $
+  
+  For the specific $x = [sigma_1, w]$ scaled to the unit ball, and knowing $norm(Phi)_2 = sigma_1$, we have:
+
+  $
+    norm(Phi)_2 >= (norm(Phi x)_2) / (norm(x)_2) >= (sigma_1^2 + w^* w) / sqrt(sigma_1^2 + w^* w) = sqrt(sigma_1^2 + w^* w) <=> sigma_1 >= sqrt(sigma_1^2 + w^* w)\
+
+    <=> sigma_1^2 >= sigma_1^2 + w^* w <=> w^* w = 0 <=> w = 0.
+  $
+
+  If $m = 1$ or $n = 1$, we are done, If not, $B$ has an SVD decomposition $B = U_2 Sigma_2 V_2^*$ by the induction hypothesis, so from @equation_Phi_Ut_A_V_matrix we have that the following is a SVD decomposition of $A$, completing the proof:
+
+  $
+    A = U_1 mat(1, 0; 0, U_2) mat(sigma_1, 0; 0, Sigma_2) mat(1, 0; 0, V_2)^* V_1^*
+  $
 ]
 
 Is the SVD factorization of A. There are more about the SVD on computing $U, Sigma, V^*$, as we will show below:
@@ -1181,7 +1192,21 @@ Is the SVD factorization of A. There are more about the SVD on computing $U, Sig
 ]<theorem_eigencalculation_of_svd>
 
 #proof[
-  PROVA ESSA PORRA DIREITO
+  Let $U Sigma V^* = A$ be the SVD of $A$, then computing $A^* A$, knowing $U,V$ are unitary matrices, we have:
+
+  $
+    A^* A = (U Sigma V^*)^* (U Sigma V^*) = V Sigma^* U^* U Sigma V^* = V Sigma^* Sigma V^* = V Sigma^2 V^*
+  $
+
+  This is an _eigenvalue_ decomposition of $A^* A$, where the eigenvalues are the entries of $Sigma^2$, which are the singular values of $A$ #text(weight: "bold")[squared], and the eigenvectors are the columns of $V$.
+
+  For $A A^*$, we have:
+
+  $
+    A A^* = (U Sigma V^*) (U Sigma V^*)^* = U Sigma V^* V Sigma^* U^* = U Sigma Sigma^* U^* = U Sigma^2 U^*
+  $
+
+  The reasoning here is analogous. So the proof is complete.
 ]
 
 By @theorem_eigencalculation_of_svd, calculating the SVD of $A$ has been reduced to calculating the eigenvalues and eigenvectors of $A^* A$ and $A A^*$, here are some examples of singular value decompositions:
@@ -1239,7 +1264,7 @@ By @theorem_eigencalculation_of_svd, calculating the SVD of $A$ has been reduced
   $
 ]
 
-== A Python-Implementation of Least Squares with Decompositions (2a)
+== Least Squares with QR and SVD
 <section_python_qr_svd>
 
 Here we will write code that solves the least squares problem usig the 2 factorizations shown in @section_QR_decomposition and @section_SVD_decompositon, as well as the ordinary approach to least squares shown in @section_simple_linear_regression.
@@ -1256,10 +1281,6 @@ $ <functions_to_be_numerically_analysed>
 
 BOTA OS CODIGO
 
-== The polynomial approach: An efficiency analysis (2c)
-
-Here we will analyse what happens when we do _polynomial_ regression with the tools shown in @section_python_qr_svd. The same functions of @functions_to_be_numerically_analysed will be used here, with polynomials of degree up to $n = 15$:
-
-BOTA AS PORRA DOS CODIGO
+== How good are the approximations? (2c)
 
 
