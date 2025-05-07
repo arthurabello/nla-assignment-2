@@ -476,7 +476,7 @@ if __name__ == "__main__":
     main()
 ```
 
-Good plots are:
+Some good plots of this code are:
 
 #figure(
   image("condition_number.png", width: 80%),
@@ -493,9 +493,9 @@ Good plots are:
 ) <condition_number_plot_2>
 
 
-@condition_number_plot and @condition_number_plot_2 show us that it looks like $f(m) = kappa(A_m)$ converges to a real number, we will evaluate this hypothesis below:
+@condition_number_plot and @condition_number_plot_2 show us that apparently $f(m) = kappa(A_m)$ converges to a real number, we will evaluate this hypothesis below:
 
-Using $||dot||_2$ the conditioning number of $hat(A) = A^* A$ in @matrix_system_least_squares is:
+Using $norm(dot)_2$, the conditioning number of $hat(A) = A^* A$ in @matrix_system_least_squares is:
 
 $
   kappa(hat(A)) = norm(hat(A))_2 dot norm(hat(A)^(-1))_2 = sigma_1 / sigma_m 
@@ -743,10 +743,11 @@ $
 $
 
 = How Perturbations Affect The Condition Number of A (1e)
+<section_perturbations_polynomial_regression>
 
 Still on polynomial regression, in this section we analyze what happens to $kappa(A)$, when $A$ is perturbated with $m = 100$ and $n = 1, dots, 20$.
 
-We will run _poly_ls(m, n)_ built in @poly_ls_section for $m = 100$ and $n = 1, dots, 20$ and then numerically calculate the condition number of the matrices, the following code is used:
+We will run _poly_ls(m, n)_ built in @poly_ls_section for $m = 100$ and $n = 1, dots, 20$ and then numerically calculate the condition number of the matrices. The following code is used:
 
 ```python
 import numpy as np
@@ -821,17 +822,13 @@ A good plot of the growth of the condition number is:
 
 @condition_number_perturbation_plot Shows that _magic_ happens
 
-
-
-
-
 = Polynomial Regression with a Different Dataset 
 == A Different Dataset
 
 If we change $S := {(t_i, b_i) | t_i = i / m, i = 0, 1, dots, m}$ to $hat(S) = {(t_i, b_i) | t_i = i/m - 1/2}$, the polynomial regression becomes:
 
 $
-  p(t_0 = -1/2) = phi_0 + phi_1 (-1/2) + dots + phi_n (-1/2)^n = b_0\
+  p(t_0 = 0 - 1/2) = phi_0 + phi_1 (-1/2) + dots + phi_n (-1/2)^n = b_0\
   p(t_1 = 1/m - 1/2) = phi_0 + phi_1 (1/m - 1/2) + phi_2 (1/m - 1/2)^2 + dots + phi_n (1/m - 1/2)^n\
   dots.v\
   p(t_m = 1 - 1/2) = phi_0 + phi_1 (1 - 1/2) + dots + phi_n (1 - 1/2)^n
@@ -871,9 +868,20 @@ $
     1, -1/2, (-1/2)^2, dots, (-1/2)^n
   ), A) dot underbrace(mat(
     hat(phi_0); hat(phi_1); dots.v; hat(phi_n)
-  ), hat(Phi))\
+  ), hat(Phi))
 
-  = mat(
+$
+
+Notice that to calculate $A^* A$ we can do:
+
+$
+  (A^* A)_(i j) = angle.l l_i^(A^*), c_j^A angle.r = angle.l c_i^A, c_j^A angle.r = sum_(k = 0)^m (k/m - 1/2)^(i + j - 2)
+$
+
+So we have:
+
+$
+  mat(
     n + 1, sum_(i = 0)^n (i/m - 1/2), sum_(i = 0)^n (i/m - 1/2)^2, dots,  sum_(i = 0)^n (i/m - 1/2)^n;
     sum_(i = 0)^n i/m - 1/2,sum_(i = 0)^n (i/m - 1/2)^2, sum_(i = 0)^n (i/m - 1/2)^3, dots, sum_(i = 0)^n (i/m - 1/2)^(n+1);
     dots.v, dots.v, dots.v, dots.v, dots.v;
@@ -883,7 +891,12 @@ $
     hat(phi_1);
     dots.v;
     hat(phi_n)
-  )\
+  )
+$
+
+And doing $A^* b$ gives:
+
+$
 
   = mat(
     1, 1, 1, dots, 1;
@@ -902,15 +915,15 @@ $
   )
 $
 
-$therefore$ The least squares optimal solution $(hat(phi_0), hat(phi_1) , dots, hat(phi_n))$ is:
+So the system to be solved is:
 
 $
-  mat(
-    n + 1, sum_(i = 0)^n (i/m - 1/2), dots,  sum_(i = 0)^n (i/m - 1/2)^n;
+  underbrace(mat(
+    m + 1, sum_(i = 0)^n (i/m - 1/2), dots,  sum_(i = 0)^n (i/m - 1/2)^n;
     sum_(i = 0)^n i/m - 1/2, sum_(i = 0)^n (i/m - 1/2)^2,dots, sum_(i = 0)^n (i/m - 1/2)^(n+1);
     dots.v, dots.v, dots.v, dots.v;
     sum_(i = 0)^n (i/m - 1/2)^n, sum_(i = 0)^n (i/m - 1/2)^(n+1), dots, sum_(i = 0)^n (i/m - 1/2)^(2n)
-  )^(-1) dot mat(
+  ), hat(A)) dot vec(hat(phi_0), hat(phi_1), hat(phi_2), dots.v, hat(phi_n)) = dot mat(
     sum_(i = 0)^n b_i;
     sum_(i = 0)^n (i/m - 1/2) b_i;
     sum_(i = 0)^n (i/m - 1/2)^2 b_i;
@@ -919,12 +932,140 @@ $
   )
 $ <new_dataset_polynomial_regression>
 
-We provide numerical examples in the next section for a better visualization of @new_dataset_polynomial_regression.
+The following code calculates the new matrix $hat(A)$ in @new_dataset_polynomial_regression:
+
+```python
+import numpy as np
+import matplotlib.pyplot as plt
+
+def poly_ls_2(m, n):
+
+    """
+    Builds the (n+1) x (n+1) matrix for least-squares polynomial fitting.
+
+    Args:
+        m (int): number of subintervals (m >= 0)
+        n (int): polynomial degree (n >= 0)
+    Returns:
+        np.ndarray: shape (n+1, n+1) Gram matrix
+    Raises:
+        ValueError: if m or n is negative or not integer
+    """
+
+    if not (isinstance(m, int) and isinstance(n, int)) or m < 0 or n < 0:
+        raise ValueError("m and n must be non-negative integers")
+
+    t = np.linspace(0, 1, m + 1) - 0.5 
+    powers = t[:, None] ** np.arange(2 * n + 1) 
+    col_sums = powers.sum(axis=0)
+    M = np.empty((n + 1, n + 1))
+    for i in range(n + 1):
+        for j in range(n + 1):
+            M[i, j] = col_sums[i + j] #fills each entry
+
+    return M
+
+#examples:
+m_1 = poly_ls_2(2, 1)
+m_2 = poly_ls_2(2, 2)
+m_3 = poly_ls_2(2, 3)
+print("m = 2, n = 1:")
+print(m_1)
+print("\nm = 2, n = 2:")
+print(m_2)
+print("\nm = 2, n = 3:")
+print(m_3)
+```
+
+The examples are:
+
+#example[
+  $
+    M(2,1) = mat(
+      3, 0;
+      0, 0.5
+    )
+  $
+]
+
+#example[
+  $
+    M(2,2) = mat(
+      3, 0, 0.5;
+      0, 0.5, 0;
+      0.5, 0, 0.125
+    )
+  $
+]
+
+#example[
+  $
+    M(2,3) = mat(
+      3, 0, 0.5, 0;
+      0, 0.5, 0, 0.125;
+      0.5, 0, 0.125, 0;
+      0, 0.125, 0, 0.031
+    )
+  $
+]
+
 
 == How Conditioning changes (1f)
 
-BOTA AS PORRA DOS GRAFICO
+Here we will analyze how the condition number of $hat(A)$ shown in the previous section changes with perturbations on the degree $n$. We will use the same method used in @section_perturbations_polynomial_regression. $m = 100$ and $n = 1, dots, 20$. The following code is used:
 
+```python
+import numpy as np
+import matplotlib.pyplot as plt
+
+def compute_condition_numbers_centered(m: int, max_n: int):
+
+    """
+    Computes the condition numbers of the polynomial least-squares matrix M(m) for degrees n = 1 to max_n.
+
+    Args:
+        m (int): number of subintervals (m >= 0)
+        max_n (int): maximum polynomial degree (max_n >= 0)
+    Returns:
+        list: condition numbers of M(m) for degrees n = 1 to max_n
+    """
+
+    conds = []
+    for n in range(1, max_n + 1):
+        M  = poly_ls_2(m, n)
+        s  = np.linalg.svd(M, compute_uv=False) #computes singular values
+        conds.append(s[0] / s[-1]) #κ = σ_max / σ_min
+    return conds
+
+m, max_n = 100, 20
+
+cond_nums = compute_condition_numbers_centered(m, max_n)
+n_values  = np.arange(1, max_n + 1)
+
+print(f"Condition numbers at (m = {m})")
+for n, κ in zip(n_values, cond_nums):
+    print(f"  n = {n:2d} → κ(G) = {format_scientific(κ)}")
+
+plt.figure()
+plt.semilogy(n_values, cond_nums, marker="o")
+plt.xlabel("Polynomial degree $n$")
+plt.ylabel(r"Condition number $\kappa_2(G)$")
+plt.title(fr"Growth of $\kappa$, $m={m}$")
+plt.grid(True, which="both", ls="--")
+plt.tight_layout()
+plt.show()
+```
+
+The expected output is:
+
+#figure(
+  image("growth_of_condition_number_polynomial_regression_new_dataset.png", width: 80%),
+  caption: [
+    Growth of the condition number of $hat(A)$ with a new dataset
+  ]
+) <growth_of_condition_number_polynomial_regression_new_dataset_plot>
+
+@growth_of_condition_number_polynomial_regression_new_dataset_plot grows faster than @condition_number_perturbation_plot, they both have the same shape, but the new dataset has a higher condition number.
 
 = Least Squares with QR and SVD decompositions
 
