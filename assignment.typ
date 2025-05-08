@@ -67,10 +67,40 @@ Given $D subset RR^2$, a dataset, approximating this set through a _continuous_ 
 
 = Condition of a Problem
 
-A _problem_ is usually described as a function $f: X -> Y$ from a #text(weight: "bold")[normed] vector space $X$ of data (it has to be normed so qe can _quantify_ data) and a _normed_ vector space $Y$ of solutions, $f$ is not always a well-behaved continuous function, which is why we are interested in #text(weight: "bold")[well-conditioned] problems and not in  #text(weight: "bold")[ill-conditioned] problems, which we define:
+A _problem_ is usually described as a function $f: X -> Y$ from a #text(weight: "bold")[normed] vector space $X$ of data (it has to be normed so qe can _quantify_ data) and a _normed_ vector space $Y$ of solutions, $f$ is not always a well-behaved continuous function, which is why we are interested in #text(weight: "bold")[well-conditioned] problems and not in  #text(weight: "bold")[ill-conditioned] problems.
+
+Before diving into condition numbers we must define norms:
+
+#definition[(Norm)
+  Given $E$ a vector space over a field $KK$, a #text(weight: "bold")[norm] is a function $norm(dot):E -> RR$ that satisfies:
+
+  - $norm(x) > 0_E, forall x in E^*$, and $norm(x) = 0_E <=> x = 0_E$\
+  - $norm(x + y) <= norm(x) + norm(y)$
+  - $norm(phi x) = abs(phi) norm(x), forall phi in KK$
+]
+
+Throughout this document we will use the most famous class of norms, the p-norms defined below:
+
+#definition[(p-norm)
+  Given $p in RR$, the #text(weight: "bold")[p-norm] of $x in CC^m$ is:
+
+  $
+    norm(x)_p = (sum_(i = 1)^m abs(x_i)^p)^(1/p)
+  $
+]
+
+Some famous cases are:
+
+$
+  norm(x)_1 = sum_(i = 1)^m abs(x_i)\
+  norm(x)_2 = (sum_(i = 1)^m abs(x_i)^2)^(1/2)\
+  norm(x)_infinity = max_(1 <= i <= m) abs(x_i)
+$
+
+Now we proceed with problems and
 
 #definition[(Well-Conditioned Problem)
-  A problem $f:X -> Y$ is _well-conditioned_ at $x_0 in X$ $<=> forall epsilon > 0, exists delta > 0 |  ||x - x_0|| < delta => ||f(x) - f(x_0)|| < epsilon$.
+  A problem $f:X -> Y$ is _well-conditioned_ at $x_0 in X$ $<=> forall epsilon > 0, exists delta > 0 |  norm(x - x_0) < delta => f(x) - norm(f(x_0)) < epsilon$.
 ] <definition_of_stable_problem>
 
 This means that small perturbations in $x$ lead to small changes in $f(x)$, a problem is #text(weight: "bold")[ill-conditioned] if $f(x)$ can suffer huge changes with small changes in $x$.
@@ -80,61 +110,60 @@ We usually say $f$ is well-conditioned if it is well-conditioned $forall x in X$
 
 == The Condition number of a problem
 
-Conditioning numbers are a tool to quantify how well/ill conditioned a problem is:
+Condition numbers are a tool to quantify how well/ill conditioned a problem is:
 
 #definition[(Absolute Conditioning Number)
   Let $delta x$ be a small pertubation of $x$, so $delta f = f(x + delta x) - f(x)$. The #text(weight: "bold")[absolute] conditioning number of $f$ is:
 
   $
-    hat(kappa) = lim_(delta -> 0) sup_(||delta x|| <= delta) (||delta f||) / (||delta x||)
+    hat(kappa) = lim_(delta -> 0) sup_(norm(delta x) <= delta) (norm(delta f)) / (norm(delta x))
   $
 ] <definition_absolute_conditioning_number>
 
 The limit of the supremum can be seen as the supremum of all _infinitesimal_ perturbations, so this can be rewritten as:
 
 $
-  hat(kappa) = sup_(delta x) (||delta f||) / (||delta x||)
+  hat(kappa) = sup_(delta x) (norm(delta f)) / (norm(delta x))
 $
 
-If $f$ is differentiable, we can evaluate the abs.conditioning number using its derivative, if $J$ is the matrix whose $i times j$ entry is the derivative $(diff f_i) / (diff x_j)$ (jacobian of $f$), then we know that $delta f approx J(x) delta x$, with equality in the limit $||delta x|| -> 0$. So the absolute conditioning number of $f$ becomes:
+If $f$ is differentiable, we can evaluate the abs.conditioning number using its derivative, if $J$ is the matrix whose $i times j$ entry is the derivative $(diff f_i) / (diff x_j)$ (jacobian of $f$), then we know that $delta f approx J(x) delta x$, with equality in the limit $norm(delta x) -> 0$. So the absolute conditioning number of $f$ becomes:
 
 $
-  hat(kappa) = ||J(x)||,
+  hat(kappa) = norm(J(x))
 $ <absolute_conditioning_number__jacobian>
 
 == The Relative Condition Number
-
 When, instead of analyzing the whole set $X$ of data, we are interested in _relative_ changes, we use the #text(weight: "bold")[relative condition number:]
 
 #definition[(Relative Condition Number)
   Given $f:X -> Y$ a problem, the _relative condition number_ $kappa(x)$ at $x in X$ is:
 
   $
-    kappa(x) = lim_(delta -> 0) sup_(||delta x|| <= delta) ((||delta f||) / (||f(x)||)) dot ((||delta x||) / (||x||))^(-1)
+    kappa(x) = lim_(delta -> 0) sup_(norm(delta x) <= delta) ((norm(delta f)) / (norm(f(x)))) dot ((norm(delta x)) / (norm(x)))^(-1)
   $
 ] <definition_relative_condition_number>
 
 Or, as we did in @definition_absolute_conditioning_number, assuming that $delta f$ and $delta x$ are infinitesimal:
 
 $
-  kappa(x) = sup_(delta x) ((||delta f||) / (||f(x)||)) dot ((||delta x||) / (||x||))^(-1)
+  kappa(x) = sup_(delta x) ((norm(delta f)) / (norm(f(x)))) dot ((norm(delta x)) / (norm(x)))^(-1)
 $
 
 If $f$ is differentiable:
 
 $
-  kappa(x) = (||J(x)||) dot ((||f(x)||) / (||x||))^(-1)
+  kappa(x) = (norm(J(x))) dot ((norm(f(x))) / (norm(x)))^(-1)
 $ <relative_condition_number_through_jacobian>
 
 Relative condition numbers are more useful than absolute conditioning numbers because the #text(weight: "bold")[floating point arithmetic] used in many computers produces _relative_ errors, the latter is not a highlight of this discussion.
 
-Here are some examples of conditioning:
+Here are some examples of the definitions above:
 
 #example[
   Consider the problem of obtaining the scalar $x/2$ from $x in RR$. The function $f(x) = x/2$ is differentiablle, so by @relative_condition_number_through_jacobian:
 
   $
-    kappa(x) = (||J||) dot ((||f(x)||) / (||x||))^(-1) = (1/2) dot ((x/2) / x)^(-1) = 1.
+    kappa(x) = (norm(J)) dot ((norm(f(x))) / (norm(x)))^(-1) = (1/2) dot ((x/2) / x)^(-1) = 1.
   $
 ]
 
@@ -146,10 +175,10 @@ This problem is well-conditioned ($kappa$ is small).
   $
     J = mat((diff f) / (diff x_1) , (diff f) / (diff x_2)) = mat(1,-1)
   $
-  With $||J||_infinity$ = 2, so the condition number is:
+  With $norm(J)_infinity = 2$, so the condition number is:
 
   $
-    kappa = (||J||_infinity) dot ((||f(x)||) / (||x||))^(-1) = 2 / (|x_1 - x_1| dot max{|x_1|, |x_2|})
+    kappa = (norm(J)_infinity) dot ((norm(f(x))) / (norm(x)))^(-1) = 2 / (|x_1 - x_1| dot max{|x_1|, |x_2|})
   $
 
   This problem can be ill-conditioned if $|x_1 - x_2| approx 0$ ($kappa$ gets huge), and well-conditioned otherwise
@@ -162,13 +191,13 @@ We will deduce the conditioning number of a matrix from the conditioning number 
 Consider the problem of obtaining $A x$ given $A in CC^(m times n)$. We will calculate the relative condition number with respect to perturbations on $x$. Directly from @definition_relative_condition_number, we have:
 
 $
-  kappa = sup_(delta x) (||A (x + delta x) - A x||) / (||A x||) dot ((||delta x||) / (||x||))^(-1) = sup_(delta x) (||A delta x||) / (||delta x||) dot ((||A x||) / (||x||))^(-1)
+  kappa = sup_(delta x) (norm(A (x + delta x) - A x)) / (norm(A x)) dot ((norm(delta x)) / (norm(x)))^(-1) = sup_(delta x) (norm(A delta x)) / (norm(delta x)) dot ((norm(A x)) / (norm(x)))^(-1)
 $ <beginning_proof>
 
-Since $sup_(forall x) (||A delta x||) / (||delta x||) = ||A|| $, we have:
+Since $sup_(forall x) (norm(A delta x)) / (norm(delta x)) = norm(A)$, we have:
 
 $
-  kappa = ||A|| dot (||x||) / (||A x||)
+  kappa = norm(A) dot (norm(x)) / (norm(A x))
 $ <condition_number_of_matrix_vector_multiplication>
 
 This is a precise formula as a function of $(A, x)$.
@@ -179,37 +208,37 @@ The following theorem will be useful in a near future:
   $forall x in CC^n, A in CC^(n times n), det(A) != 0$, the following holds:
 
   $
-      (||x||) / (||A x||) <= ||A^(-1)||
+      (norm(x)) / (norm(A x)) <= norm(A^(-1))
   $
 ] <theorem_inequality_norms>
 
 #proof[
-  Since $forall A, B in CC^(n times n), ||A B || <= ||A|| ||B||$, we have:
+  Since $forall A, B in CC^(n times n), norm(A B ) <= norm(A) norm(B)$, we have:
 
   $
-    ||A A^(-1) x || <= ||A x|| ||A^(-1)|| <=> (||x||) / (||A x||) <= ||A^(-1)||
+    norm(A A^(-1) x) <= norm(A x) norm(A^(-1)) <=> (norm(x)) / (norm(A x)) <= norm(A^(-1))
   $
 ]
 
-So using this in @condition_number_of_matrix_vector_multiplication , we can write:
+So using this in @condition_number_of_matrix_vector_multiplication, we can write:
 
 $
-  kappa <= ||A|| dot ||A^(-1)||
+  kappa <= norm(A) dot norm(A^(-1))
 $
 
 Or:
 
 $
-  kappa = alpha ||A|| dot ||A^(-1)||
+  kappa = alpha norm(A) dot norm(A^(-1))
 $
 
 With
 
 $
-  alpha = (||x||) / (||A x||) dot (||A^(-1)||)^(-1)
+  alpha = (norm(x)) / (norm(A x)) dot (norm(A^(-1)))^(-1)
 $ <end_proof>
 
-From @theorem_inequality_norms, we can choose $x$ to make $alpha = 1$, and therefore $kappa = ||A|| dot ||A^(-1)||$.
+From @theorem_inequality_norms, we can choose $x$ to make $alpha = 1$, and therefore $kappa = norm(A) dot norm(A^(-1))$.
 
 Consider now the problem of calculating $A^(-1) b$ given $A in CC^(n times n)$. This is mathematically identical to the problem we just analyzed, so the following theorem has already been proven:
 
@@ -217,7 +246,7 @@ Consider now the problem of calculating $A^(-1) b$ given $A in CC^(n times n)$. 
   Let $A in CC^(n times n), det(A) != 0$, and consider the problem of computing $b$, from $A x = b$, by perturbating $x$. Then the following holds:
 
   $
-    kappa = ||A|| (||x||) / (||b||) <= ||A|| dot ||A^(-1)||
+    kappa = norm(A) (norm(x)) / (norm(b)) <= norm(A) dot norm(A^(-1))
   $
   
   Where $kappa$ is the condition number of the problem.
@@ -227,9 +256,9 @@ Consider now the problem of calculating $A^(-1) b$ given $A in CC^(n times n)$. 
   Read from @beginning_proof to @end_proof.
 ]
 
-Finally, $||A|| dot ||A^(-1)||$ is so useful it has a name: #text(weight: "bold")[the condition number of A] (relative to the norm $norm(dot)$)
+Finally, norm(A) dot norm(A^(-1)) is so useful it has a name: #text(weight: "bold")[the condition number of A] (relative to the norm norm(dot))
 
-If $A$ is singular, usually we write $kappa(A) = infinity$. Notice that if $||dot|| = ||dot||_2$, then $||A|| = sigma_1$ and $||A^(-1)|| = 1/sigma_m$, so:
+If $A$ is singular, usually we write $kappa(A) = infinity$. Notice that if $norm(dot) = norm(dot)_2$, then norm(A) = sigma_1 and norm(A^(-1)) = 1/sigma_m, so:
 
 $
   kappa(A) = sigma_1 / sigma_m
@@ -240,7 +269,7 @@ This is the condition number of $A$ with respect to the $2$-norm, which is the m
 = Linear Regression (1a)
 <section_simple_linear_regression>
 
-Given a dataset of equally spaced points $D := {t_i = i/m}, i = 0, 1, dots, m in RR$, linear regression consists of finding the best _line_ $f(t) = alpha + beta t$ that approximates the points $(t_i, b_i) in RR^2$, where $b_i$ are arbitrary
+Given a dataset of equally spaced points $D := {t_i = i/m}, i = 0, 1, dots, m in RR$, linear regression consists of finding the best _line_ $f(t) = alpha + beta t$ that approximates the points $(t_i, b_i) in RR^2$, where $b_i$ are arbitrary.
 
 Approximating $2$ points in $RR^2$ by a line is trivial, now approximating more points is a task that requires linear algebra. To see this, we will analyze the following example to build intuition for the general case:
 
@@ -251,7 +280,7 @@ Approximating $2$ points in $RR^2$ by a line is trivial, now approximating more 
   ],
 )
 
-Given the points $(1, 1), (2, 2), (3, 2) in RR^2$, we have $(t_1, b_1) = (1, 1), (t_2, b_2) = (2, 2), (t_3, b_3) = (3, 2) $ we would like a _line_ $f(t) = y(t) = alpha + beta t$ that best approximates $(t_i, b_i)$, in other words, since we know that the line does not pass through all 3 points, we would like to find the _closest_ line to #text(weight: "bold")[each point] of the dataset $D$, so the system:
+Given the points $(1, 1), (2, 2), (3, 2) in RR^2$, we have $(t_1, b_1) = (1, 1), (t_2, b_2) = (2, 2), (t_3, b_3) = (3, 2) $ we would like a _line_ $f(t) = y(t) = alpha + beta t$ that best approximates $(t_i, b_i)$. In other words, since we know that the line does not pass through all 3 points, we would like to find the _closest_ line to #text(weight: "bold")[each point] of the dataset $D$. So the system:
 
 $
   f(1) = alpha + beta = 1\
@@ -269,9 +298,9 @@ $
   ), A) dot underbrace(mat(alpha;beta), x) = underbrace(mat(1;2;2), b)
 $
 
-Clearly has no solution, (the line does not cross the 3 points), but it has a _closest solution_, which we can find through #text(weight: "bold")[minimizing] the errors produced by this approximation.
+Clearly has no solution, but it has a _closest solution_, which we can find through #text(weight: "bold")[minimizing] the errors produced by this approximation.
 
-Let $x^* != x$ be a solution to the system, let the error produced by approximating the points through a line be $e = A x - b$, we want the smaller error _square_ possible (that is why least squares). We square the error to avoid and detect outliers, so:
+Let $x^* != x$ be a solution to the system. And let the error produced by approximating the points through a line be $e = A x - b$. Minimizing the error requires a _norm_, which is defined
 
 $
   e_1^2 + e_2^2 + e_3^2
@@ -286,7 +315,7 @@ Is what we want to minimize, where $e_i$ is the error (distance) from the ith po
   ],
 )
 
-So we will project $b$ into $C(A)$, giving us the closest solution, and the least squares solutions is when $hat(x)$ minimizes $||A x - b||^2$, this occurs when the residual $e = A x - b$ is orthogonal to $C(A)$, since $N(A^*) perp C(A)$ and the dimensions sum up the left dimension of the matrix, so by the well-known projection formula, we have:
+So we will project $b$ into $C(A)$, giving us the closest solution, and the least squares solutions is when $hat(x)$ minimizes $norm(A x - b)^2$, this occurs when the residual $e = A x - b$ is orthogonal to $C(A)$, since $N(A^*) perp C(A)$ and the dimensions sum up the left dimension of the matrix, so by the well-known projection formula, we have:
 
 $
   A^* A hat(x) = A ^* b\
@@ -467,7 +496,7 @@ def main():
     plt.plot(m_vals, conds)
     plt.xlabel('m')
     plt.ylabel('Condition number κ₂(A)')
-    plt.title('Condition number of A(m) over [0, M]')
+    plt.title('Condition number of $A^T A(m)$ over [0, M]')
     plt.grid(True)
     plt.tight_layout()
     plt.show()
@@ -493,7 +522,7 @@ Some good plots of this code are:
 ) <condition_number_plot_2>
 
 
-@condition_number_plot and @condition_number_plot_2 show us that apparently $f(m) = kappa(A_m)$ converges to a real number, we will evaluate this hypothesis below:
+@condition_number_plot and @condition_number_plot_2 show us that apparently $kappa(A^T A)_m$ converges to a real number, we will evaluate this hypothesis below:
 
 Using $norm(dot)_2$, the conditioning number of $hat(A) = A^* A$ in @matrix_system_least_squares is:
 
@@ -528,7 +557,7 @@ $
 This gives:
 
 $
-  kappa(A) = sigma_1 / sigma_m = sqrt((m+1)/(12m) [(8m + 1) + sqrt(52m^2-  8m + 1)]) / sqrt((m+1)/(12m) [(8m + 1) - sqrt(52m^2-  8m + 1)])\
+  kappa(hat(A)) = sigma_1 / sigma_m = sqrt((m+1)/(12m) [(8m + 1) + sqrt(52m^2-  8m + 1)]) / sqrt((m+1)/(12m) [(8m + 1) - sqrt(52m^2-  8m + 1)])\
 
   = sqrt(((8m + 1) + sqrt(52m^2-  8m + 1)) / ((8m + 1) - sqrt(52m^2-  8m + 1)))
 $ <condition_number_problem_b>
@@ -536,7 +565,7 @@ $ <condition_number_problem_b>
 And the limit as $m$ grows is:
 
 $
-  lim_(m -> oo) kappa(A) = lim_(m -> oo) sqrt(((8m + 1) + sqrt(52m^2-  8m + 1)) / ((8m + 1) - sqrt(52m^2-  8m + 1)))\
+  lim_(m -> oo) kappa(hat(A)) = lim_(m -> oo) sqrt(((8m + 1) + sqrt(52m^2-  8m + 1)) / ((8m + 1) - sqrt(52m^2-  8m + 1)))\
 $
 
 Multiplying by the conjugate of the denominator and ignoring the square root (it is irelevant for the limit):
@@ -568,7 +597,7 @@ $
 And finally:
 
 $
-  lim_(m -> oo) kappa(A) = (8 + sqrt(52)) / sqrt(12) = (4 + sqrt(13)) / sqrt(3)  
+  lim_(m -> oo) kappa(hat(A))_m = (8 + sqrt(52)) / sqrt(12) = (4 + sqrt(13)) / sqrt(3)  
 $
 
 A very good visualization of this is:
@@ -581,7 +610,7 @@ A very good visualization of this is:
 ) <condition_number_desmos_plot>
 
 
-@condition_number_desmos_plot shows the function approaching the limit. One could say that this problem is well conditioned, for $kappa(A_m) < (4 + sqrt(13)) / sqrt(3), forall m > 0$, and $(4 + sqrt(13)) / sqrt(3)$ is not a very big number. We will not go deep into the discussion of how well-condition this problem is, but we can say that the condition number of $A$ is not a problem for the linear regression algorithm.
+@condition_number_desmos_plot shows the function approaching the limit. One could say that this problem is well conditioned, for $kappa(hat(A))_m < (4 + sqrt(13)) / sqrt(3), forall m > 0$, and $(4 + sqrt(13)) / sqrt(3)$ is not a very big number. We will not go deep into the discussion of how well-condition this problem is, but we can say that the condition number of $A$ is not a problem for the linear regression algorithm.
 
 = Polynomial Regression (1c)
 
@@ -676,7 +705,7 @@ $ <matrix_system_polynomial_least_squares>
 
 This gives the optimal vector $hat(Phi)$ that minimizes the least squares error. We will use computational methods to analyze this system in some of the next sections.
 
-= Computing the polynomial regression matrix A given (m,n) (1d)
+= Computing the polynomial regression matrix, given (m,n) (1d)
 <poly_ls_section>
 
 Here is a python function that calculates the polynomial regression matrix from @matrix_system_polynomial_least_squares, given the dimensions $(m, n)$:
@@ -687,7 +716,7 @@ import numpy as np
 def poly_ls(m, n):
 
     """
-    Build the (n+1) x (n+1) matrix A for least-squares polynomial fitting.
+    Builds the (n+1) x (n+1) matrix A^T A for least-squares polynomial fitting.
     
     Args:
         m (int): number of subintervals (m >= 0)
@@ -707,7 +736,7 @@ def poly_ls(m, n):
 
     A = np.zeros((n+1, n+1), dtype=float) #intializes 0 matrix to be filled
     np.set_printoptions(precision=3, suppress=True)
-    for j in range(n+1):
+    for j in range(n+1): #THIS IS NOT A, IT IS A^* A
         for k in range(n+1):
             A[j, k] = np.sum(x**(j + k)) #fills each entry
 
@@ -723,18 +752,18 @@ for m, n in [(1, 1), (2, 2), (2, 3)]: #trivial examples
 Some simple cases are:
 
 $ 
-  A(1, 1) = mat(
+  hat(A)(1, 1) = mat(
     2, 1;
     1, 1
   )\
 
-  A(2, 2) = mat(
+  hat(A)(2, 2) = mat(
     3, 1.5, 1.25;
     1.5,   1.25,  1.125;
     1.25,  1.125, 1.062
   )\
 
-  A(2, 3) = mat(
+  hat(A)(2, 3) = mat(
     3, 1.5, 1.25, 1.125;
     1.5,   1.25,  1.125, 1.062;
     1.25,  1.125, 1.062, 1.031;
@@ -742,10 +771,10 @@ $
   )
 $
 
-= How Perturbations Affect The Condition Number of A (1e)
+= How Perturbations Affect The Condition Number (1e)
 <section_perturbations_polynomial_regression>
 
-Still on polynomial regression, in this section we analyze what happens to $kappa(A)$, when $A$ is perturbated with $m = 100$ and $n = 1, dots, 20$.
+Still on polynomial regression, in this section we analyze what happens to $kappa(hat(A))$, when $hat(A)$ is perturbated with $m = 100$ and $n = 1, dots, 20$.
 
 We will run _poly_ls(m, n)_ built in @poly_ls_section for $m = 100$ and $n = 1, dots, 20$ and then numerically calculate the condition number of the matrices. The following code is used:
 
@@ -1067,6 +1096,11 @@ The expected output is:
 
 @growth_of_condition_number_polynomial_regression_new_dataset_plot grows faster than @condition_number_perturbation_plot, they both have the same shape, but the new dataset has a higher condition number.
 
+= Comparing the Condition Number
+<section_graphically_comparing_condition_numbers>
+
+UGA BUGA UGA
+
 = Least Squares with QR and SVD decompositions
 
 We have shown the solutions to the least squares problem $A x = b$, but this problem could be solved with factorizations of $A$, such as the QR and SVD, in the following sections we will show these factorizations and use them to solve the least squares problem.
@@ -1203,7 +1237,7 @@ The _singular value decomposition_  of a matrix is based on the fact that the im
   ],
 )
 
-So the independent directions $v_1, v_2$ have been mapped to another set of orthogonal directions $sigma_1 v_1, sigma_2 v_2$, so with $S:= {v in CC^n | ||v|| = 1}$ as the unit ball,  let's define:
+So the independent directions $v_1, v_2$ have been mapped to another set of orthogonal directions $sigma_1 v_1, sigma_2 v_2$, so with $S:= {v in CC^n | norm(v) = 1}$ as the unit ball,  let's define:
 
 #definition[(Singular Values)
   The $n$ _singular values_ $sigma_i$ of $A in CC(m times n)$ are the lengths of the $n$ new axes of $A S$, written in non-crescent order $sigma_1 >= dots >= sigma_n$.
@@ -1410,9 +1444,27 @@ By @theorem_eigencalculation_of_svd, calculating the SVD of $A$ has been reduced
 
 Here we will write code that solves the least squares problem usig the 2 factorizations shown in @section_QR_decomposition and @section_SVD_decompositon, as well as the ordinary approach to least squares shown in @section_simple_linear_regression.
 
+The following code solves the least squares problem using the QR factorization:
+
+```python
+
+```
+
+The following code solves the least squares problem using the SVD factorization:
+
+```python
+
+```
+
+And this last code solves the least squares problem using the ordinary approach shown in @section_simple_linear_regression:
+
+```python
+
+```
+
 == Examples (2b)
 
-We will also use these algorithms to do linear regression on the simple functions $f, g, h: RR -> RR$ defined as:
+We will also use these algorithms to do linear regression on the simple functions $f, g, h: RR -> RR$ defined as: UGA BUGA UGA
 
 $
   f(t) = sin(t)\
