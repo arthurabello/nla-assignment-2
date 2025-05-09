@@ -54,7 +54,7 @@
 #align(center)[
   #set par(justify: true)
   *Abstract*\
-  We derive linear and polynomial regression in subsets of $RR$ and discuss the condition number of the associated matrices, numerical algorithms for the SVD and QR factorization are built and used on an efficiency analysis of the 3 methods to do linear or polynomial regression, stability of these algorirths is  mentioned and 
+  We derive linear and polynomial regression in subsets of $RR$ and discuss the condition number of the associated matrices, numerical algorithms for the SVD and QR factorization are built and used on an efficiency analysis of the 3 methods to do linear or polynomial regression, stability of these algorirths is discussed.
 ]
 
 #outline()
@@ -65,11 +65,9 @@
 
 Given $D subset RR^2$, a dataset, approximating this set through a _continuous_ $f: RR -> RR$ is a very important problem in statistics, we will derive the 2 most important and most used methods to do this: linear and polynomial regression. Both are based on the least squares minimization problem. We will also discuss the conditioning number of the problems shown. A computational approach to regression is shown as well. We discuss how the condition number changes when the matrix is QR or SVD decomposed, and the algorithms for such decompositions are built.
 
-= Condition of a Problem
+= Norms and Problems
 
-A _problem_ is usually described as a function $f: X -> Y$ from a #text(weight: "bold")[normed] vector space $X$ of data (it has to be normed so qe can _quantify_ data) and a _normed_ vector space $Y$ of solutions, $f$ is not always a well-behaved continuous function, which is why we are interested in #text(weight: "bold")[well-conditioned] problems and not in  #text(weight: "bold")[ill-conditioned] problems.
-
-Before diving into condition numbers we must define norms:
+A #text(weight: "bold")[norm] is a way to quantify _size_ on a vector space. A norm is a class of functions that satisfy some properties, which we define below:
 
 #definition[(Norm)
   Given $E$ a vector space over a field $KK$, a #text(weight: "bold")[norm] is a function $norm(dot):E -> RR$ that satisfies:
@@ -97,7 +95,7 @@ $
   norm(x)_infinity = max_(1 <= i <= m) abs(x_i)
 $
 
-Now we proceed with problems and
+Now we proceed with the main topic of this section, the condition number of a problem. It is useful to see a problem as a function $f: X -> Y$ from a _normed_ vector space $X$ of data and a space $Y$ of solutions, $f$ is not always a well-behaved continuous function, which is why we are interested in #text(weight: "bold")[well-conditioned] problems and not in  #text(weight: "bold")[ill-conditioned] problems.
 
 #definition[(Well-Conditioned Problem)
   A problem $f:X -> Y$ is _well-conditioned_ at $x_0 in X$ $<=> forall epsilon > 0, exists delta > 0 |  norm(x - x_0) < delta => f(x) - norm(f(x_0)) < epsilon$.
@@ -178,7 +176,7 @@ This problem is well-conditioned ($kappa$ is small).
   With $norm(J)_infinity = 2$, so the condition number is:
 
   $
-    kappa = (norm(J)_infinity) dot ((norm(f(x))) / (norm(x)))^(-1) = 2 / (|x_1 - x_1| dot max{|x_1|, |x_2|})
+    kappa = (norm(J)_infinity) dot ((norm(f(x))) / (norm(x)))^(-1) = 2 / (|x_1 - x_2| dot max{|x_1|, |x_2|})
   $
 
   This problem can be ill-conditioned if $|x_1 - x_2| approx 0$ ($kappa$ gets huge), and well-conditioned otherwise
@@ -213,7 +211,7 @@ The following theorem will be useful in a near future:
 ] <theorem_inequality_norms>
 
 #proof[
-  Since $forall A, B in CC^(n times n), norm(A B ) <= norm(A) norm(B)$, we have:
+  Since $norm(A B ) <= norm(A) norm(B)$, we have:
 
   $
     norm(A A^(-1) x) <= norm(A x) norm(A^(-1)) <=> (norm(x)) / (norm(A x)) <= norm(A^(-1))
@@ -256,9 +254,9 @@ Consider now the problem of calculating $A^(-1) b$ given $A in CC^(n times n)$. 
   Read from @beginning_proof to @end_proof.
 ]
 
-Finally, norm(A) dot norm(A^(-1)) is so useful it has a name: #text(weight: "bold")[the condition number of A] (relative to the norm norm(dot))
+Finally, $norm(A) dot norm(A^(-1))$ is so useful it has a name: #text(weight: "bold")[the condition number of A] (relative to the norm $norm(dot)$)
 
-If $A$ is singular, usually we write $kappa(A) = infinity$. Notice that if $norm(dot) = norm(dot)_2$, then norm(A) = sigma_1 and norm(A^(-1)) = 1/sigma_m, so:
+If $A$ is singular, $kappa(A) = oo$. Notice that if $norm(dot) = norm(dot)_2$, then $norm(A) = sigma_1$ and $norm(A^(-1)) = 1/sigma_m$, so:
 
 $
   kappa(A) = sigma_1 / sigma_m
@@ -269,16 +267,25 @@ This is the condition number of $A$ with respect to the $2$-norm, which is the m
 = Linear Regression (1a)
 <section_simple_linear_regression>
 
-Given a dataset of equally spaced points $D := {t_i = i/m}, i = 0, 1, dots, m in RR$, linear regression consists of finding the best _line_ $f(t) = alpha + beta t$ that approximates the points $(t_i, b_i) in RR^2$, where $b_i$ are arbitrary.
+Given the dataset:
+
+$
+  D := {t_i = i/m}, i = 0, 1, dots, m in RR  
+$ <dataset_linear_regression>
+
+of equally spaced points , linear regression consists of finding the best _line_ $f(t) = alpha + beta t$ that approximates the points $(t_i, b_i) in RR^2$, where $b_i$ are arbitrary.
 
 Approximating $2$ points in $RR^2$ by a line is trivial, now approximating more points is a task that requires linear algebra. To see this, we will analyze the following example to build intuition for the general case:
 
 #figure(
   image("least_squares_idea.png", width: 80%),
   caption: [
-    A glimpse into what we want to see
+    A good approximation for the 3 points shown
   ],
-)
+) <figure_simples_linear_regression>
+
+@figure_simples_linear_regression is a glimpse onto what we are about to produce.
+
 
 Given the points $(1, 1), (2, 2), (3, 2) in RR^2$, we have $(t_1, b_1) = (1, 1), (t_2, b_2) = (2, 2), (t_3, b_3) = (3, 2) $ we would like a _line_ $f(t) = y(t) = alpha + beta t$ that best approximates $(t_i, b_i)$. In other words, since we know that the line does not pass through all 3 points, we would like to find the _closest_ line to #text(weight: "bold")[each point] of the dataset $D$. So the system:
 
@@ -298,7 +305,7 @@ $
   ), A) dot underbrace(mat(alpha;beta), x) = underbrace(mat(1;2;2), b)
 $
 
-Clearly has no solution, but it has a _closest solution_, which we can find through #text(weight: "bold")[minimizing] the errors produced by this approximation.
+Clearly has no solution. But it has a _closest solution_ which we can find through #text(weight: "bold")[minimizing] the errors produced by this approximation.
 
 Let $x^* != x$ be a solution to the system. And let the error produced by approximating the points through a line be $e = A x - b$. Minimizing the error requires a _norm_, which is defined
 
@@ -313,9 +320,9 @@ Is what we want to minimize, where $e_i$ is the error (distance) from the ith po
   caption: [
     The errors (distances)
   ],
-)
+)<figure_errors_simple_linear_regression>
 
-So we will project $b$ into $C(A)$, giving us the closest solution, and the least squares solutions is when $hat(x)$ minimizes $norm(A x - b)^2$, this occurs when the residual $e = A x - b$ is orthogonal to $C(A)$, since $N(A^*) perp C(A)$ and the dimensions sum up the left dimension of the matrix, so by the well-known projection formula, we have:
+So we will project $b$ into $C(A)$, giving us the closest solution, and the least squares solutions is when $hat(x)$ minimizes $norm(A x - b)^2$, this occurs when the residual $e = A x - b$ is orthogonal to $C(A)$. Since $N(A^*) perp C(A)$ and the dimensions sum up the left dimension of the matrix. so by the well-known projection formula, we have:
 
 $
   A^* A hat(x) = A ^* b\
@@ -338,7 +345,7 @@ $
   ) dot mat(1;2;3) = mat(5;11)
 $
 
-So the system to find $hat(x) = mat(hat(alpha);hat(beta))$ becomes:
+So the system to find $hat(x) = [hat(alpha), hat(beta)]$ becomes:
 
 $ 
   3 alpha + 5 beta = 5\
@@ -353,7 +360,7 @@ $
   e_3^2 = (f(t_3) - b_2)^2 = (f(3) - 2)^2 = (alpha + 3 beta - 2)^2
 $
 
-The system in @system_1 is _precisely_ what is obtained after using partial derivatives to minimize the erros sum as a function of $(alpha, beta)$:
+This is consistent with what we see in @figure_errors_simple_linear_regression. Notice that @system_1 is _precisely_ what is obtained after using partial derivatives to minimize the erros sum as a function of $(alpha, beta)$:
 
 $
   f(alpha, beta) = (alpha + beta - 1)^2 + (alpha + 2 beta - 2)^2 + (alpha + 3 beta - 2)^2\
@@ -370,21 +377,21 @@ $
   y(t) = 2/3 + 1/2 t.
 $
 
-If we have $n > 3$ points to approximate through a line, the reasoning is analogous:
+If we have $n > 3$ points to approximate with linear regression, the reasoning is analogous:
 
-Going back to $D$, we want to find the extended system as we did in @system_2, so let the best line be:
+Going back to $D$ in @dataset_linear_regression , we want to find the extended system as we did in @system_1, so let:
 $
   f(t) = alpha + beta t
 $
 
-That best approximates the points $(0, b_0), (1/m, b_1), dots , (1, b_m)$. The system is:
+Be the linear regression line, for $D = {(0, b_0), (1/m, b_1), dots , (1, b_m)}$. The system is:
 
 $
-  f(0) = b_0 = alpha,\
+  f(0/m =   0) = b_0 = alpha,\
   f(1/m) = b_1 = alpha + beta/m,\
   f(2/m) = b_2 = alpha + 2/m beta\
   dots\
-  f(1) = b_m = alpha + beta
+  f(m/m = 1) = b_m = alpha + beta
 $
 
 Or:
@@ -450,9 +457,9 @@ This provides the optimal vector $hat(x)$ that minimizes the least squares error
 = How the condition number of A changes (1b)
 <condition_number_linear_regression_system>
 
-We are interested in the condition number of linear regression, which is the condition number of the matrix $A$ in @matrix_system_least_squares. We will analyze how the condition number of $A$ changes with respect to perturbations $m$, the number of points in the dataset. A computational approach is appropriate.
+We are interested in the condition number of $hat(A) = A^* A$ shown in @equation_with_AtransposeA. We will analyze how the condition number of $hat(A)$ changes with respect to perturbations on $m$, the number of points in the dataset. A computational approach is appropriate.
 
-Here is a python code that numerically calculates many values of $kappa(A) = f(m)$ as a function of $m$:
+Here is a python code that numerically calculates many values of $kappa(hat(A)_m)$ as a function of $m$:
 
 ```python
 import numpy as np
@@ -479,65 +486,60 @@ def cond_number(m):
     A_inv = np.linalg.inv(A)
     return np.linalg.norm(A, 2) * np.linalg.norm(A_inv, 2)
 
-def main(): 
-    M = float(input("Enter maximum m (M > 0): "))
-    N = int(input("Enter number of sample points: ")) #however the user wants to plot 
+M = float(input("Enter maximum m (M > 0): "))
+N = int(input("Enter number of sample points: ")) #however the user wants to plot 
 
-    m_vals = np.linspace(0, M, N)
-    conds  = []
+m_vals = np.linspace(0, M, N)
+conds  = []
 
-    for m in m_vals:
-        try:
-            conds.append(cond_number(m))
-        except (ZeroDivisionError, np.linalg.LinAlgError):
-            conds.append(np.inf) #if it is not invertible
+for m in m_vals:
+    try:
+        conds.append(cond_number(m))
+    except (ZeroDivisionError, np.linalg.LinAlgError):
+        conds.append(np.inf) #if it is not invertible
 
-    plt.figure()
-    plt.plot(m_vals, conds)
-    plt.xlabel('m')
-    plt.ylabel('Condition number κ₂(A)')
-    plt.title('Condition number of $A^T A(m)$ over [0, M]')
-    plt.grid(True)
-    plt.tight_layout()
-    plt.show()
-
-if __name__ == "__main__":
-    main()
+plt.figure()
+plt.plot(m_vals, conds)
+plt.xlabel('m')
+plt.ylabel('Condition number $κ(A^* A)$')
+plt.title('Condition number of $A^* A(m)$')
+plt.grid(True)
+plt.tight_layout()
+plt.show()
 ```
 
-Some good plots of this code are:
+Good visualizations of this are:
 
 #figure(
   image("condition_number.png", width: 80%),
   caption: [
-    Condition number of A(m) over [0, 100]
+    Condition number of $hat(A)$ over [0, 100]
   ],
 ) <condition_number_plot>
 
 #figure(
   image("condition_number_2.png", width: 80%),
   caption: [
-    Condition number of A(m) over [0, 10000]
+    Condition number of $hat(A)$ over [0, 10000]
   ],
 ) <condition_number_plot_2>
 
+@condition_number_plot and @condition_number_plot_2 show us that apparently $kappa(hat(A)_m)$ converges to a real number. We will evaluate this hypothesis below:
 
-@condition_number_plot and @condition_number_plot_2 show us that apparently $kappa(A^T A)_m$ converges to a real number, we will evaluate this hypothesis below:
-
-Using $norm(dot)_2$, the conditioning number of $hat(A) = A^* A$ in @matrix_system_least_squares is:
+Using $norm(dot)_2$, the condition number of $hat(A)$ is:
 
 $
   kappa(hat(A)) = norm(hat(A))_2 dot norm(hat(A)^(-1))_2 = sigma_1 / sigma_m 
 $
 
-Singular Values are better explored in @section_SVD_decompositon. Now we will calculate the singular values of $hat(A)$, which are the square roots of the eigenvalues of $hat(A)$ (see @theorem_eigencalculation_of_svd). So we have:
+Singular Values are better explored in @section_SVD_decompositon. Now we calculate the singular values of $hat(A)$, which are the square roots of the eigenvalues of $hat(A)$ (see @theorem_eigencalculation_of_svd). So we have:
 $
   det(hat(A) - lambda I) = 0 <=> det(mat(
     m+1 - lambda , (m + 1) / 2;
-    (m + 1) / 2 , ((m + 1) (2m + 1)) / 6 - lambda
+    (m + 1) / 2 , ((m + 1) (2m + 1)) / (6m) - lambda
   )) = 0\ 
 
-  <=> (m + 1 - lambda) [((m + 1) (2m + 1)) / 6 - lambda] - ((m + 1)/2)^2 = 0\
+  <=> (m + 1 - lambda) [((m + 1) (2m + 1)) / (6m) - lambda] - ((m + 1)/2)^2 = 0\
 
   <=> lambda^2
     - ((m + 1)(8m + 1)) / (6m) lambda + ((m + 1)^2 (m + 2)) / (12m)
@@ -562,7 +564,7 @@ $
   = sqrt(((8m + 1) + sqrt(52m^2-  8m + 1)) / ((8m + 1) - sqrt(52m^2-  8m + 1)))
 $ <condition_number_problem_b>
 
-And the limit as $m$ grows is:
+And the limit as $m -> oo$:
 
 $
   lim_(m -> oo) kappa(hat(A)) = lim_(m -> oo) sqrt(((8m + 1) + sqrt(52m^2-  8m + 1)) / ((8m + 1) - sqrt(52m^2-  8m + 1)))\
@@ -597,7 +599,7 @@ $
 And finally:
 
 $
-  lim_(m -> oo) kappa(hat(A))_m = (8 + sqrt(52)) / sqrt(12) = (4 + sqrt(13)) / sqrt(3)  
+  lim_(m -> oo) kappa(hat(A)_m) = (8 + sqrt(52)) / sqrt(12) = (4 + sqrt(13)) / sqrt(3)  
 $
 
 A very good visualization of this is:
@@ -703,12 +705,12 @@ $
   )
 $ <matrix_system_polynomial_least_squares>
 
-This gives the optimal vector $hat(Phi)$ that minimizes the least squares error. We will use computational methods to analyze this system in some of the next sections.
+This gives the optimal vector $hat(Phi)$ that solves the least squares problem. We will use computational methods to analyze this system in some of the next sections.
 
 = Computing the polynomial regression matrix, given (m,n) (1d)
 <poly_ls_section>
 
-Here is a python function that calculates the polynomial regression matrix from @matrix_system_polynomial_least_squares, given the dimensions $(m, n)$:
+Here is a python function that calculates the polynomial regression matrix $hat(A) = A^* A$ from @matrix_system_polynomial_least_squares, given the dimensions $(m, n)$:
 
 ```python
 import numpy as np
@@ -776,7 +778,8 @@ $
 
 Still on polynomial regression, in this section we analyze what happens to $kappa(hat(A))$, when $hat(A)$ is perturbated with $m = 100$ and $n = 1, dots, 20$.
 
-We will run _poly_ls(m, n)_ built in @poly_ls_section for $m = 100$ and $n = 1, dots, 20$ and then numerically calculate the condition number of the matrices. The following code is used:
+We will run _poly_ls(m, n)_ built in @poly_ls_section for $m = 100$ and $n = 1, dots, 20$. Given the sad fact that polynomial rootfinding is not a well-conditioned problem, we will then numerically calculate the condition number of $hat(A)$ for each output of _poly_ls(m, n)_. See the code:
+
 
 ```python
 import numpy as np
@@ -849,7 +852,16 @@ A good plot of the growth of the condition number is:
   ],
 ) <condition_number_perturbation_plot>
 
-@condition_number_perturbation_plot Shows that _magic_ happens
+@condition_number_perturbation_plot Shows that with higher degrees of polynomials, $kappa(hat(A)_m)$ grows #text(weight: "bold")[exponentially]. This can make polynomial regression a #text(weight: "bold")[bad choice] for approximating datasets with many points. Which contradicts our initial assumption! 
+
+
+One could notice that the graph wiggles up and down at $12 <= n <= 20$. To understand this we must take into account that $epsilon_m approx 2.22 dot 10^(-16)$, and at $n = 12$, $kappa(hat(A))$ is already past $10^16$. Notice as well that we are calculating on $hat(A)$, not $A$, so:
+
+$
+  kappa(hat(A) = A^* A) = sigma_max(A^* A) / sigma_min(A^* A) = (sigma_max(A) / sigma_min(A))^2 = kappa(A)^2
+$ <equation_weird_condition_plot>
+
+Squaring $kappa(A)$ pushes numbers past the #link("https://en.wikipedia.org/wiki/Double-precision_floating-point_format")[IEEE 754 double precision] quickly. So once the trye $kappa(hat(A) = A^* A)$ exceeds $1/epsilon_m$, the smallest singular value underflows to $0$. So everything above that is #text(weight: "bold")[numerically indistinguishable]. So the line stops at $approx 10^16$ and wiggles for a while.
 
 = Polynomial Regression with a Different Dataset 
 == A Different Dataset
@@ -1094,12 +1106,128 @@ The expected output is:
   ]
 ) <growth_of_condition_number_polynomial_regression_new_dataset_plot>
 
-@growth_of_condition_number_polynomial_regression_new_dataset_plot grows faster than @condition_number_perturbation_plot, they both have the same shape, but the new dataset has a higher condition number.
+
+The weird behavior noticed in @condition_number_perturbation_plot is not seen in @growth_of_condition_number_polynomial_regression_new_dataset_plot. This is due to the fact that the dataset has been scaled to be centered at $0$, reducing the dynamic range in each column and preventing the singular values from the underflow zone (at least for $20 >= n$)
 
 = Comparing the Condition Number
 <section_graphically_comparing_condition_numbers>
 
-UGA BUGA UGA
+Here we graphically compare both condition numbers seen in @condition_number_perturbation_plot and @growth_of_condition_number_polynomial_regression_new_dataset_plot. The following code is used:
+
+```python 
+def compute_condition_numbers(m, max_n):
+
+    """
+    Compute k(A^* A).
+
+    Each matrix A is constructed by
+    poly_ls(m, n)
+
+    Args:
+        m (int): Number of subintervals in the sample grid t_i = i/m.
+        max_n (int): Maximum polynomial degree to evaluate.
+
+    Returns:
+        list[float]: The list  
+        [ k(A_i^* A_i)) ],  
+        where k(A^* A) = k(A)^2 and κ is the 2-norm condition number.
+    """
+
+    conds = []
+    for n in range(1, max_n + 1):
+        A = poly_ls(m, n)
+        sigma = np.linalg.svd(A, compute_uv=False)
+        κ2 = sigma[0] / sigma[-1]  #k_2(A)
+        conds.append(κ2 ** 2) #κ_2(A^* A) = κ_2(A)^2
+    return conds
+
+
+def compute_condition_numbers_centered(m, max_n):
+
+    """
+    Compute k(M) for a centred / scaled polynomial basis.
+    Each matrix M is produced by poly_ls_2(m, n)
+
+    Args:
+        m (int): Number of subintervals in the sample grid t_i = i/m.
+        max_n (int): Maximum polynomial degree to evaluate.
+
+    Returns:
+        list[float]: The list  
+        [ k(M_i) ] where  
+        k is the 2-norm condition number of the centred design matrix.
+    """
+
+    conds = []
+    for n in range(1, max_n + 1):
+        M = poly_ls_2(m, n)
+        sigma = np.linalg.svd(M, compute_uv=False)
+        conds.append(sigma[0] / sigma[-1])
+    return conds
+
+
+def plot_condition_numbers(m = 100, max_n = 20):
+
+    """
+    Plot the growth of condition numbers for raw and centred Vandermonde bases.
+
+    Args:
+        m (int, optional): Number of subintervals in the sample grid
+            t_i = i/m. Defaults to 100.
+
+        max_n (int, optional): Maximum polynomial degree to display.
+            Defaults to 20.
+
+    Returns:
+        None.  The function displays a semilog plot comparing  
+        k(A^* A) (raw basis) and k(M) (centred / scaled basis).
+    """
+
+    n_vals = np.arange(1, max_n + 1)
+    κ_raw = compute_condition_numbers(m, max_n)
+    κ_centered = compute_condition_numbers_centered(m, max_n)
+
+    plt.figure(figsize=(7, 5))
+    plt.semilogy(
+        n_vals,
+        κ_raw,
+        marker="o",
+        linestyle="-",
+        linewidth=1.4,
+        markersize=5,
+        label=r"$\kappa(A^{\top}A)$ (raw basis)",
+    )
+    plt.semilogy(
+        n_vals,
+        κ_centered,
+        marker="s",
+        linestyle="--",
+        linewidth=1.4,
+        markersize=5,
+        label=r"$\kappa(M)$ (centred / scaled basis)",
+    )
+
+    plt.xlabel("Polynomial degree $n$")
+    plt.ylabel("Condition number")
+    plt.title(fr"Condition-number growth, $m={m}$")
+    plt.grid(True, which="both", ls=":", lw=0.7)
+    plt.legend()
+    plt.tight_layout()
+    plt.show()
+
+plot_condition_numbers(m=100, max_n=20)
+```
+
+The expected output is the plot below:
+
+#figure(
+  image("graphical_comparison_condition_numbers.png", width: 80%),
+  caption: [
+    A comparison of both datasets
+  ]
+) <figure_comparison_datasets>
+
+@figure_comparison_datasets confirms the hypothesis that the condition number of the non-centered dataset tends to produce bigger condition numbers.
 
 = Least Squares with QR and SVD decompositions
 
@@ -1160,7 +1288,6 @@ The _full_ QR decomposition of $A in CC^(m times n)$ not of full-rank is analogo
   ],
 )
 <figure_full_qr>
-
 
 And the decomposition becomes:
 
@@ -1444,27 +1571,109 @@ By @theorem_eigencalculation_of_svd, calculating the SVD of $A$ has been reduced
 
 Here we will write code that solves the least squares problem usig the 2 factorizations shown in @section_QR_decomposition and @section_SVD_decompositon, as well as the ordinary approach to least squares shown in @section_simple_linear_regression.
 
-The following code solves the least squares problem using the QR factorization:
+The following code has functions that solve the least squares problem using the QR and SVD decompositions, as well as through the normal approach shown in @section_simple_linear_regression. A function to build the matrix $A$ is also included. With a boolean parameter to alternate betweeen a centered ($t_i = i/m$) or a non-centered $(t_i = i/m - 1/2)$ dataset:
 
 ```python
+from numpy.linalg import qr, svd, solve, pinv, cond #easier
 
-```
+def ls_qr(A, b):
 
-The following code solves the least squares problem using the SVD factorization:
+    """
+    Solves the least squares problem Ax = b using QR decomposition.
 
-```python
+    Args:
+        A : system matrix
+        b : right-hand side vector
+    Returns:
+        x : solution vector
+        y : fitted values (Ax)
+    """
 
-```
+    Q, R = qr(A, mode='reduced')
+    x = solve(R, Q.T @ b)
+    y = A @ x
+    
+    return x, y
 
-And this last code solves the least squares problem using the ordinary approach shown in @section_simple_linear_regression:
+def ls_svd(A, b):
 
-```python
+    """
+    Solves the least squares problem Ax = b using SVD decomposition.
 
-```
+    Args:
+        A : system matrix
+        b : right-hand side vector
+    Returns:
+        x : solution vector
+        y : fitted values (Ax)
+    """
+
+    U, S, Vt = svd(A, full_matrices=False)
+    
+    S_inv = np.zeros_like(S) #calculate the pseudo-inverse using SVD, x = V * S⁻¹ * U.T * b
+
+    tol = np.finfo(float).eps * max(A.shape) * S[0] #tolarance for singular values
+    
+    for i in range(len(S)):
+        if S[i] > tol:
+            S_inv[i] = 1.0 / S[i] #inverts if above tolarance
+    
+    x = (Vt.T @ np.diag(S_inv) @ U.T) @ b
+    y = A @ x
+    
+    return x, y
+
+def ls_normal(A, b):
+
+    """
+    Solves the least squares problem Ax = b using normal equations.
+
+    Args:
+        A : system matrix
+        b : right-hand side vector
+    Returns:
+        x : solution vector
+        y : fitted values (Ax)
+    """
+
+    ATA = A.T @ A
+    ATb = A.T @ b
+    
+    x = solve(ATA, ATb)
+    y = A @ x
+    
+    return x, y
+
+def build_A_matrix(m, n, centralized=False):
+
+    """
+    Creates the matrix A for polynomial regression of degree n. 
+
+    Args:
+        m (int): number of subintervals (m >= 0)
+        n (int): polynomial degree (n >= 0)
+        centralized (bool): if True, use centralized points
+    Returns:
+        A (np.ndarray): shape (m+1, n+1) matrix for polynomial regression
+        t (np.ndarray): array of points used to create the matrix
+    """
+
+    if centralized:
+        t = np.array([i/m - 1/2 for i in range(m+1)])
+    else:
+        t = np.array([i/m for i in range(m+1)])
+    
+    A = np.zeros((m+1, n+1))
+    
+    for i in range(n+1):
+        A[:, i] = t**i  #clever
+        
+    return A, t
+``` 
 
 == Examples (2b)
 
-We will also use these algorithms to do linear regression on the simple functions $f, g, h: RR -> RR$ defined as: UGA BUGA UGA
+We will use the functions defined on the previous sections to do regression on the following functions:
 
 $
   f(t) = sin(t)\
@@ -1472,8 +1681,12 @@ $
   h(t) = cos(3t)
 $ <functions_to_be_numerically_analysed>
 
-BOTA OS CODIGO
+The results are shown:
+
+
+
 
 == How good are the approximations? (2c)
 
+Here we will analyze the error seen when 
 
