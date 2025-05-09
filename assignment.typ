@@ -278,7 +278,7 @@ of equally spaced points , linear regression consists of finding the best _line_
 Approximating $2$ points in $RR^2$ by a line is trivial, now approximating more points is a task that requires linear algebra. To see this, we will analyze the following example to build intuition for the general case:
 
 #figure(
-  image("least_squares_idea.png", width: 80%),
+  image("plots/least_squares_idea.png", width: 80%),
   caption: [
     A good approximation for the 3 points shown
   ],
@@ -316,7 +316,7 @@ $
 Is what we want to minimize, where $e_i$ is the error (distance) from the ith point to the line:
 
 #figure(
-  image("least_squares_with_errors.png", width: 80%),
+  image("plots/least_squares_with_errors.png", width: 80%),
   caption: [
     The errors (distances)
   ],
@@ -511,14 +511,14 @@ plt.show()
 Good visualizations of this are:
 
 #figure(
-  image("condition_number.png", width: 80%),
+  image("plots/condition_number.png", width: 80%),
   caption: [
     Condition number of $hat(A)$ over [0, 100]
   ],
 ) <condition_number_plot>
 
 #figure(
-  image("condition_number_2.png", width: 80%),
+  image("plots/condition_number_2.png", width: 80%),
   caption: [
     Condition number of $hat(A)$ over [0, 10000]
   ],
@@ -605,7 +605,7 @@ $
 A very good visualization of this is:
 
 #figure(
-  image("desmos_condition_number.png", width: 60%),
+  image("plots/desmos_condition_number.png", width: 60%),
   caption: [
     The purple line is the limit and the red is the function @condition_number_problem_b
   ],
@@ -846,7 +846,7 @@ if __name__ == "__main__":
 A good plot of the growth of the condition number is:
 
 #figure(
-  image("(m,n)condition_perturbation.png", width: 80%),
+  image("plots/(m,n)condition_perturbation.png", width: 80%),
   caption: [
     Growth of the condition number of A(m) for polynomial regression
   ],
@@ -1100,7 +1100,7 @@ plt.show()
 The expected output is:
 
 #figure(
-  image("growth_of_condition_number_polynomial_regression_new_dataset.png", width: 80%),
+  image("plots/growth_of_condition_number_polynomial_regression_new_dataset.png", width: 80%),
   caption: [
     Growth of the condition number of $hat(A)$ with a new dataset
   ]
@@ -1221,7 +1221,7 @@ plot_condition_numbers(m=100, max_n=20)
 The expected output is the plot below:
 
 #figure(
-  image("graphical_comparison_condition_numbers.png", width: 80%),
+  image("plots/graphical_comparison_condition_numbers.png", width: 80%),
   caption: [
     A comparison of both datasets
   ]
@@ -1282,7 +1282,7 @@ Is the _reduced_ QR decomposition of $A$.
 The _full_ QR decomposition of $A in CC^(m times n)$ not of full-rank is analogous to the reduced, but $|m - n|$ 0-columns are appended to $hat(Q)$ to make it a unitary $m times m$ matrix $Q$, and 0-rows are aded to $hat(R)$ to make it a $m times n$ still triangular matrix:
 
 #figure(
-  image("full_qr.png", width: 60%),
+  image("plots/full_qr.png", width: 60%),
   caption: [
     Full QR factorization
   ],
@@ -1358,7 +1358,7 @@ Here are some examples:
 The _singular value decomposition_  of a matrix is based on the fact that the image of the unit sphere under a $m times n$ matrix is a #text(weight: "bold")[hyperellipse:]
 
 #figure(
-  image("hyperellipse.png", width: 80%),
+  image("plots/hyperellipse.png", width: 80%),
   caption: [
     SVD of a $2 times 2$ matrix
   ],
@@ -1684,21 +1684,21 @@ $ <functions_to_be_numerically_analysed>
 The results are shown:
 
 #figure(
-  image("linear_regression_cos.png", width: 100%),
+  image("plots/linear_regression_cos.png", width: 100%),
   caption: [
     Linear regression on $cos(t)$
   ]
 ) <linear_regression_cos>
 
 #figure(
-  image("linear_regression_et.png", width: 100%),
+  image("plots/linear_regression_et.png", width: 100%),
   caption: [
     Linear regression on $e^t$
   ]
 ) <linear_regression_et>
 
 #figure(
-  image("linear_regression_sin.png", width: 100%),
+  image("plots/linear_regression_sin.png", width: 100%),
   caption: [
     Linear regression on $sin(t)$
   ]
@@ -1792,21 +1792,21 @@ plt.show()
 The expected output are the plots:
 
 #figure(
-  image("error_analysis_cost.png", width: 100%),
+  image("plots/error_analysis_cost.png", width: 100%),
   caption: [
     Error on $cos(3t)$
   ]
 ) <figure_errors_cos3t>
 
 #figure(
-  image("error_analysis_et.png", width: 100%),
+  image("plots/error_analysis_et.png", width: 100%),
   caption: [
     Error on $e^t$
   ]
 ) <figure_error_et>
 
 #figure(
-  image("error_analysis_sint.png", width: 100%),
+  image("plots/error_analysis_sint.png", width: 100%),
   caption: [
     Error on $sin(t)$
   ]
