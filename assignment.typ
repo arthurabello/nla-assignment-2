@@ -1683,10 +1683,146 @@ $ <functions_to_be_numerically_analysed>
 
 The results are shown:
 
+#figure(
+  image("linear_regression_cos.png", width: 100%),
+  caption: [
+    Linear regression on $cos(t)$
+  ]
+) <linear_regression_cos>
+
+#figure(
+  image("linear_regression_et.png", width: 100%),
+  caption: [
+    Linear regression on $e^t$
+  ]
+) <linear_regression_et>
+
+#figure(
+  image("linear_regression_sin.png", width: 100%),
+  caption: [
+    Linear regression on $sin(t)$
+  ]
+) <linear_regression_sin>
+
+Plots @linear_regression_cos, @linear_regression_et, @linear_regression_sin shows us that all 3 methods result in the same line. This is expected, for we are using $100$ equally sparse points on a small portion of the image of the functions.
+
 
 
 
 == How good are the approximations? (2c)
 
-Here we will analyze the error seen when 
+In @section_perturbations_polynomial_regression, we have seen that polynomial regression is not a very well-conditioned problem, so here we will analyze the errors produced by such method. We use what has been done in the previous section.
+
+The following code plots the errors:
+
+```python
+m = 100
+t = np.linspace(0, 1, m+1)
+
+function_data = [(res['name'], res['values']) for res in results] #data here
+
+max_degree = 15
+all_errors = {name: {'qr': [], 'svd': [], 'normal': []} for name, _ in function_data}
+all_cond_numbers = []
+
+for n in range(1, max_degree + 1):
+    print(f"\nPolynomial degree: {n}")
+    
+    A, _ = build_A_matrix(m, n) #matrix for regression
+    cond_num = cond(A)
+    all_cond_numbers.append(cond_num)
+    print(f"Condition number of A: {format_scientific(cond_num)}")
+    
+    for name, values in function_data: #forall funcs, solve using all methods
+        try:
+            x_qr, y_qr = ls_qr(A, values)
+            error_qr = np.linalg.norm(y_qr - values)
+            all_errors[name]['qr'].append(error_qr)
+        except Exception as e:
+            print(f"Error with QR for {name}, degree {n}: {e}")
+            all_errors[name]['qr'].append(np.nan)
+            
+        try:
+            x_svd, y_svd = ls_svd(A, values)
+            error_svd = np.linalg.norm(y_svd - values)
+            all_errors[name]['svd'].append(error_svd)
+        except Exception as e:
+            print(f"Error with SVD for {name}, degree {n}: {e}")
+            all_errors[name]['svd'].append(np.nan)
+            
+        try:
+            x_normal, y_normal = ls_normal(A, values)
+            error_normal = np.linalg.norm(y_normal - values)
+            all_errors[name]['normal'].append(error_normal)
+        except Exception as e:
+            print(f"Error with Normal Equations for {name}, degree {n}: {e}")
+            all_errors[name]['normal'].append(np.nan)
+        
+        #show errors
+        print(f"{name} - Errors: QR: {format_scientific(all_errors[name]['qr'][-1])}, "
+              f"SVD: {format_scientific(all_errors[name]['svd'][-1])}, "
+              f"Normal: {format_scientific(all_errors[name]['normal'][-1])}")
+
+degrees = list(range(1, max_degree + 1))
+
+for name, _ in function_data:
+    plt.figure(figsize=(6, 5), dpi=150) 
+    plt.semilogy(degrees, all_errors[name]['qr'],     'ro-', label='QR')
+    plt.semilogy(degrees, all_errors[name]['svd'],    'gs-', label='SVD')
+    plt.semilogy(degrees, all_errors[name]['normal'], 'bx-', label='Normal Eqs.')
+
+    plt.title(f'Error vs. Polynomial Degree for {name}')
+    plt.xlabel('Polynomial degree $n$')
+    plt.ylabel('Residual error (log scale)')
+    plt.grid(True, which='both', ls=':')
+    plt.legend()
+    plt.tight_layout()
+    plt.show()
+
+plt.figure(figsize=(6, 5), dpi=150)
+plt.semilogy(degrees, all_cond_numbers, 'mo-')
+plt.xlabel('Polynomial degree $n$')
+plt.ylabel('Condition number (log scale)')
+plt.title('Condition Number vs. Polynomial Degree')
+plt.grid(True, which='both', ls=':')
+plt.tight_layout()
+plt.show()
+```
+
+The expected output are the plots:
+
+#figure(
+  image("error_analysis_cost.png", width: 100%),
+  caption: [
+    Error on $cos(3t)$
+  ]
+) <figure_errors_cos3t>
+
+#figure(
+  image("error_analysis_et.png", width: 100%),
+  caption: [
+    Error on $e^t$
+  ]
+) <figure_error_et>
+
+#figure(
+  image("error_analysis_sint.png", width: 100%),
+  caption: [
+    Error on $sin(t)$
+  ]
+) <figure_error_sint>
+
+We know that the functions $e^t$ and $sin(t)$ are crescent on $[0,1]$ and shifted up, so the linear model would require higher degree to better describe this curve.
+
+- #text(weight: "bold")[Normal System:] The error falls considerably until $approx 10^(-8)$, which is expected.
+
+- #text(weight: "bold")[SVD:] After $approx n = 8$ it starts climbing, due to the loss of significance from the ill-conditioned Vandermonde Matrix (huge condition numbers).
+
+- #text(weight: "bold")[QR:] Climbs all the way down until machine precision, which is expected from the QR factorization.
+
+Now the function $cos(3t)$ behaves differently. Expanding it on the Taylor Series:
+
+$
+  cos(3t) = cos(3t)
+$
 
