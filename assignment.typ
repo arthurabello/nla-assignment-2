@@ -103,7 +103,7 @@ Now we proceed with the main topic of this section, the condition number of a pr
 
 This means that small perturbations in $x$ lead to small changes in $f(x)$, a problem is #text(weight: "bold")[ill-conditioned] if $f(x)$ can suffer huge changes with small changes in $x$.
 
-We usually say $f$ is well-conditioned if it is well-conditioned $forall x in X$, if there is at least one $x_i$ in which the problem is ill-conditioned, then we can use that whole problem is ill-conditioned.
+We usually say $f$ is well-conditioned if it is well-conditioned $forall x in X$. If there is at least one $x_i$ in which the problem is ill-conditioned, then we can use that whole problem is ill-conditioned.
 
 
 == The Condition number of a problem
@@ -124,7 +124,7 @@ $
   hat(kappa) = sup_(delta x) (norm(delta f)) / (norm(delta x))
 $
 
-If $f$ is differentiable, we can evaluate the abs.conditioning number using its derivative, if $J$ is the matrix whose $i times j$ entry is the derivative $(diff f_i) / (diff x_j)$ (jacobian of $f$), then we know that $delta f approx J(x) delta x$, with equality in the limit $norm(delta x) -> 0$. So the absolute conditioning number of $f$ becomes:
+If $f$ is differentiable, we can evaluate the abs.conditioning number using its derivative. If $J$ is the matrix whose $i times j$ entry is the derivative $(diff f_i) / (diff x_j)$ (jacobian of $f$), then we know that $delta f approx J(x) delta x$, with equality in the limit $norm(delta x) -> 0$. So the absolute conditioning number of $f$ becomes:
 
 $
   hat(kappa) = norm(J(x))
@@ -1814,15 +1814,16 @@ The expected output are the plots:
 
 We know that the functions $e^t$ and $sin(t)$ are crescent on $[0,1]$ and shifted up, so the linear model would require higher degree to better describe this curve.
 
-- #text(weight: "bold")[Normal System:] The error falls considerably until $approx 10^(-8)$, which is expected.
+- #text(weight: "bold")[Normal System:] The error falls considerably until $approx 10^(-8)$, which is expected. Since the condition numbr is squared, it climbs sooner than the 2 other approaches. 
 
-- #text(weight: "bold")[SVD:] After $approx n = 8$ it starts climbing, due to the loss of significance from the ill-conditioned Vandermonde Matrix (huge condition numbers).
+- #text(weight: "bold")[SVD:] After $approx n = 8$ it starts climbing, due to the loss of significance from the ill-conditioned Vandermonde Matrix (huge condition number due to a big $n$). We see that the normal system of equations climbs sooner than the SVD, due to the difference in magnitude of the condition numbers
 
 - #text(weight: "bold")[QR:] Climbs all the way down until machine precision, which is expected from the QR factorization.
 
 Now the function $cos(3t)$ behaves differently. Expanding it on the Taylor Series:
 
 $
-  cos(3t) = cos(3t)
+  cos(3t) = 1 - (3t)^2 / 2! + (3t)^4 / 4! - (3t)^6 / 6! + dots
 $
 
+Only _even_ powers appear. So when the degree increases from an odd $phi$ to the next odd $phi + 1$, no even power is added. The expansion gains a term that has zero coefficient, as a consequence, the error does not improve. This explains the nearly horizontal parts between consecutive degrees.
